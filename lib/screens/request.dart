@@ -1,0 +1,357 @@
+import 'package:ahakam_v8/models/account.dart';
+import 'package:ahakam_v8/screens/browse.dart';
+import 'package:ahakam_v8/screens/home.dart';
+import 'package:ahakam_v8/screens/messagesScreen.dart';
+import 'package:ahakam_v8/screens/notification.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+
+class RequestsScreen extends StatefulWidget {
+  const RequestsScreen({super.key, required this.account});
+  final Account account;
+
+  @override
+  _RequestsScreenState createState() => _RequestsScreenState();
+}
+
+class _RequestsScreenState extends State<RequestsScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final int _selectedIndex = 2; // Default tab index
+
+  // Stream that listens to requests related to the user
+  Stream<List<Map<String, dynamic>>> fetchLawyerRequests() {
+    return _firestore
+        .collection('requests')
+        .where('userId', isEqualTo: widget.account.uid) // Filter requests
+        .snapshots()
+        .map((querySnapshot) {
+          return querySnapshot.docs.map((doc) => doc.data()).toList();
+        });
+  }
+
+  // Handles bottom navigation
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+
+    Widget nextScreen;
+    switch (index) {
+      case 0:
+        nextScreen = BrowseScreen('', account: widget.account);
+        break;
+
+      case 1:
+        nextScreen = MessagesScreen(account: widget.account);
+        break;
+      case 2:
+        nextScreen = RequestsScreen(account: widget.account);
+        break;
+      case 3:
+        nextScreen = HomeScreen(account: widget.account);
+
+      default:
+        return;
+    }
+
+    Get.offAll(() => nextScreen, transition: Transition.noTransition);
+  }
+
+  // Extracts and formats the request date safely
+  String getFormattedDate(Map<String, dynamic> request) {
+    Timestamp? timestamp;
+
+    if (request['date'] != null) {
+      final dynamic dateValue = request['date'];
+
+      if (dateValue is Timestamp) {
+        timestamp = dateValue; // Correct Firestore Timestamp
+      } else if (dateValue is String) {
+        try {
+          timestamp = Timestamp.fromDate(DateTime.parse(dateValue));
+        } catch (e) {
+          debugPrint("Error parsing date string: $e");
+          timestamp = null;
+        }
+      } else {
+        debugPrint("Unexpected date format: $dateValue");
+      }
+    }
+
+    if (timestamp != null) {
+      DateTime dateTime = timestamp.toDate();
+      return "${dateTime.day}/${dateTime.month}/${dateTime.year}";
+    }
+
+    return "Unknown Date";
+  }
+
+  Widget getRequestCard(Map<String, dynamic> request) {
+    final String title = request['title'] ?? 'Unknown Title';
+    final String lawyerName = request['lawyerName'] ?? 'Unknown Lawyer';
+    final String status = request['status'] ?? 'Unknown Status';
+    final String formattedDate = getFormattedDate(request);
+    final String time = request['time'];
+    Future<DocumentSnapshot<Map<String, dynamic>>?> getinfo() async {
+      var query =
+          await FirebaseFirestore.instance
+              .collection('account')
+              .where('name', isEqualTo: lawyerName)
+              .limit(1)
+              .get();
+      return query.docs.first;
+    }
+
+    final String fees = request['fees'] ?? '20.0';
+
+    Color statusColor =
+        status == 'Accepted'
+            ? const Color.fromARGB(255, 76, 175, 79)
+            : status == 'Pending'
+            ? const Color.fromARGB(255, 255, 153, 0)
+            : Colors.red;
+
+    return FutureBuilder(
+      future: getinfo(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData == false || snapshot.hasError) return Center();
+        var lawyerdata = snapshot.data!.data()!;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 246, 236, 206),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Status and View Details
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "Status: $status",
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Get.to(
+                          MessagesScreen(account: widget.account),
+                          transition: Transition.noTransition,
+                        );
+                      },
+                      child:
+                          status == 'Accepted'
+                              ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color.fromARGB(
+                                    255,
+                                    218,
+                                    209,
+                                    182,
+                                  ),
+
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "Go to chats",
+                                  style: TextStyle(
+                                    color: const Color.fromARGB(255, 0, 0, 0),
+                                  ),
+                                ),
+                              )
+                              : Center(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // User's profile picture, name, and request title
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 25,
+                      backgroundImage:
+                          lawyerdata['imageUrl'] != null
+                              ? NetworkImage(lawyerdata['imageUrl'])
+                              : const AssetImage('assets/images/brad.webp'),
+                      backgroundColor: Colors.grey[300],
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          lawyerName,
+                          style: TextStyle(
+                            color: const Color.fromARGB(255, 0, 0, 0),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          title,
+                          style: TextStyle(
+                            color: const Color.fromARGB(255, 0, 0, 0),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Divider(color: const Color.fromARGB(77, 0, 0, 0)),
+                const SizedBox(height: 8),
+
+                // Request details (date, time, and fees)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Case type: Online consultation",
+                      style: TextStyle(
+                        color: const Color.fromARGB(179, 0, 0, 0),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      color: const Color.fromARGB(179, 0, 0, 0),
+                      size: 16,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      formattedDate,
+                      style: TextStyle(
+                        color: const Color.fromARGB(179, 0, 0, 0),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Icon(
+                      Icons.access_time,
+                      color: const Color.fromARGB(179, 0, 0, 0),
+                      size: 16,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      time,
+                      style: TextStyle(
+                        color: const Color.fromARGB(179, 0, 0, 0),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.monetization_on,
+                      color: const Color.fromARGB(179, 0, 0, 0),
+                      size: 16,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      "Fees: \$${fees}",
+                      style: TextStyle(
+                        color: const Color.fromARGB(179, 0, 0, 0),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+        ),
+        toolbarHeight: 70,
+        title: Text(
+          "Requests",
+          style: GoogleFonts.lato(
+            textStyle: const TextStyle(
+              fontSize: 25,
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        automaticallyImplyLeading: false,
+      ),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: fetchLawyerRequests(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError || snapshot.data == null) {
+            return const Center(child: Text("Error fetching requests"));
+          } else if (snapshot.data!.isEmpty) {
+            return const Center(child: Text("No requests sent."));
+          }
+
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) {
+              return getRequestCard(snapshot.data![index]);
+            },
+          );
+        },
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedItemColor: const Color.fromARGB(255, 147, 96, 0),
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(LucideIcons.search), label: ""),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.messageCircle),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.clipboardList),
+            label: "",
+          ),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: ""),
+        ],
+      ),
+    );
+  }
+}
