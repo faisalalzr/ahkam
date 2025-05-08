@@ -20,7 +20,7 @@ class _LawsuitState extends State<Lawsuit> {
     required String lawyerId,
     required String clientId,
     required String requestId,
-    required double fee,
+    required int fee,
   }) async {
     final paymentsRef = FirebaseFirestore.instance.collection('payments');
 
@@ -47,11 +47,12 @@ class _LawsuitState extends State<Lawsuit> {
     try {
       print("Fetching requestId for rid: ${widget.rid}");
 
-      var querySnapshot = await _firestore
-          .collection('requests')
-          .where('rid', isEqualTo: widget.rid)
-          .limit(1)
-          .get();
+      var querySnapshot =
+          await _firestore
+              .collection('requests')
+              .where('rid', isEqualTo: widget.rid)
+              .limit(1)
+              .get();
 
       print("Query Result: ${querySnapshot.docs.length} documents found.");
 
@@ -76,10 +77,9 @@ class _LawsuitState extends State<Lawsuit> {
     }
 
     try {
-      await _firestore
-          .collection('requests')
-          .doc(requestId)
-          .update({'status': newStatus});
+      await _firestore.collection('requests').doc(requestId).update({
+        'status': newStatus,
+      });
 
       if (mounted) {
         setState(() {
@@ -88,22 +88,21 @@ class _LawsuitState extends State<Lawsuit> {
       }
     } catch (e) {
       print("Error updating Firestore: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to update status: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to update status: $e")));
     }
   }
 
   Future<List<Map<String, dynamic>>> fetchRequests() async {
-    QuerySnapshot querySnapshot = await _firestore
-        .collection('requests')
-        .where('rid', isEqualTo: widget.rid)
-        .get();
+    QuerySnapshot querySnapshot =
+        await _firestore
+            .collection('requests')
+            .where('rid', isEqualTo: widget.rid)
+            .get();
 
     return querySnapshot.docs
-        .map((doc) => {
-              ...doc.data() as Map<String, dynamic>,
-            })
+        .map((doc) => {...doc.data() as Map<String, dynamic>})
         .toList();
   }
 
@@ -167,9 +166,9 @@ class _LawsuitState extends State<Lawsuit> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                buildInfoCard("Status", request['status']),
+                buildInfoCard("fees", '${request['fees']}'),
                 const SizedBox(height: 10),
-                buildInfoCard("Username", request['username']),
+                buildInfoCard("Client Name", request['username']),
                 buildInfoCard("Date", formatDate(request['date'])),
                 buildInfoCard("Time", request['time']),
                 Text("Created At ${formatTimestamp(request['timestamp'])}"),
@@ -186,7 +185,7 @@ class _LawsuitState extends State<Lawsuit> {
                             lawyerId: request['lawyerId'],
                             clientId: request['userId'],
                             requestId: request['rid'],
-                            fee: 20.0, // example fee
+                            fee: request['fees'], // example fee
                           );
                           Get.back();
                           Get.snackbar("case accepted", '');
@@ -198,7 +197,8 @@ class _LawsuitState extends State<Lawsuit> {
                         child: const Text(
                           "Accept",
                           style: TextStyle(
-                              color: Color.fromARGB(255, 255, 255, 255)),
+                            color: Color.fromARGB(255, 255, 255, 255),
+                          ),
                         ),
                       ),
                     ),
@@ -217,14 +217,19 @@ class _LawsuitState extends State<Lawsuit> {
                           Get.snackbar('Case dismissed', '');
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(255, 255, 17, 0),
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            255,
+                            17,
+                            0,
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: const Text(
                           "Reject",
                           style: TextStyle(
-                              color: Color.fromARGB(255, 255, 255, 255)),
+                            color: Color.fromARGB(255, 255, 255, 255),
+                          ),
                         ),
                       ),
                     ),
@@ -252,12 +257,7 @@ class _LawsuitState extends State<Lawsuit> {
               "$label: ",
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            Expanded(
-              child: Text(
-                value,
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
+            Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
           ],
         ),
       ),

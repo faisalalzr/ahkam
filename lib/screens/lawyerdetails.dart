@@ -6,10 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart'; // NEW
 
 class LawyerDetailsScreen extends StatefulWidget {
-  final Lawyer? lawyer;
-  final Account? account;
+  final Lawyer lawyer;
+  final Account account;
   const LawyerDetailsScreen({
     super.key,
     required this.lawyer,
@@ -25,19 +26,25 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
   final _descriptionCont = TextEditingController();
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
-  final _typeController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   FirebaseFirestore fyre = FirebaseFirestore.instance;
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> getinfo() async {
-    var query =
-        await fyre
-            .collection('account')
-            .where('email', isEqualTo: widget.lawyer!.email)
-            .limit(1)
-            .get();
-    return query.docs.first;
+    try {
+      var query =
+          await fyre
+              .collection('account')
+              .where('email', isEqualTo: widget.lawyer!.email)
+              .limit(1)
+              .get();
+      if (query.docs.isNotEmpty) {
+        return query.docs.first;
+      }
+    } catch (e) {
+      print('Error fetching lawyer info: $e');
+    }
+    return null;
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -69,20 +76,24 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
   }
 
   Future<void> _sendRequest() async {
-    Get.back();
     if (_selectedDate == null || _selectedTime == null) {
       Get.snackbar('Invalid input', 'Please select both a date and time.');
       return;
     }
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final userDoc =
-        await fyre.collection('account').doc(currentUser!.uid).get();
-    final username = userDoc.data()?['name'] ?? 'Unknown';
+    if (_titleCont.text.trim().isEmpty ||
+        _descriptionCont.text.trim().isEmpty) {
+      Get.snackbar('Missing Information', 'Please fill in all fields.');
+      return;
+    }
 
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       Get.snackbar('Error', 'You must be logged in to send a request.');
       return;
     }
+
+    final userDoc = await fyre.collection('account').doc(currentUser.uid).get();
+    final username = userDoc.data()?['name'] ?? 'Unknown';
 
     final request = {
       'rid': '${currentUser.uid}${widget.lawyer!.uid}',
@@ -98,12 +109,13 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       'timestamp': FieldValue.serverTimestamp(),
       'started?': false,
       'ended?': false,
+      'fees': widget.lawyer!.fees!,
     };
 
     try {
       await fyre.collection('requests').add(request);
-      Get.snackbar('Success', 'Consultation request sent!');
       Get.back();
+      Get.snackbar('Success', 'Consultation request sent!');
     } catch (e) {
       Get.snackbar('Error', 'Failed to send request: $e');
     }
@@ -128,35 +140,32 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
             ),
             content: SingleChildScrollView(
               physics: BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTextField('Title', _titleCont, icon: Icons.edit),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Description',
-                      _descriptionCont,
-                      icon: Icons.description,
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Select Date',
-                      _dateController,
-                      icon: Icons.calendar_today,
-                      onTap: () => _selectDate(context),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Select Time',
-                      _timeController,
-                      icon: Icons.access_time,
-                      onTap: () => _selectTime(context),
-                    ),
-                  ],
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTextField('Title', _titleCont, icon: Icons.edit),
+                  SizedBox(height: 16),
+                  _buildTextField(
+                    'Description',
+                    _descriptionCont,
+                    icon: Icons.description,
+                    maxLines: 3,
+                  ),
+                  SizedBox(height: 16),
+                  _buildTextField(
+                    'Select Date',
+                    _dateController,
+                    icon: Icons.calendar_today,
+                    onTap: () => _selectDate(context),
+                  ),
+                  SizedBox(height: 16),
+                  _buildTextField(
+                    'Select Time',
+                    _timeController,
+                    icon: Icons.access_time,
+                    onTap: () => _selectTime(context),
+                  ),
+                ],
               ),
             ),
             actionsPadding: const EdgeInsets.only(
@@ -177,10 +186,7 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -203,14 +209,21 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       readOnly: onTap != null,
       onTap: onTap,
       maxLines: maxLines,
+      style: GoogleFonts.lato(fontSize: 15),
       decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: icon != null ? Icon(icon, size: 20) : null,
+        hintText: label,
+        prefixIcon:
+            icon != null ? Icon(icon, size: 20, color: Colors.grey[700]) : null,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         filled: true,
-        fillColor: const Color.fromARGB(255, 255, 255, 255),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(width: 0.01),
+        fillColor: Colors.grey[100],
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.black, width: 1.2),
         ),
       ),
     );
@@ -221,12 +234,12 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: color ?? Colors.black87),
+          Icon(icon, size: 15, color: color ?? Colors.black87),
           SizedBox(width: 8),
           Flexible(
             child: Text(
               label,
-              style: GoogleFonts.lato(fontSize: 16, color: Colors.black87),
+              style: GoogleFonts.lato(fontSize: 14, color: Colors.black87),
             ),
           ),
         ],
@@ -240,111 +253,152 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       backgroundColor: Color(0xFFF7F8FC),
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
+          onPressed: () => Get.back(),
           icon: Icon(Icons.arrow_back_ios_new, size: 17),
         ),
-        backgroundColor: Color.fromARGB(255, 255, 255, 255),
-        title: Text(
-          'Lawyer Details',
-          style: GoogleFonts.lato(fontWeight: FontWeight.bold),
-        ),
-        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+        backgroundColor: Colors.white,
+        title: Text('Lawyer Details', style: GoogleFonts.lato()),
+        foregroundColor: Colors.black,
         elevation: 0,
+        centerTitle: true,
       ),
       body: FutureBuilder(
         future: getinfo(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return Center(child: Text('No data found'));
+          if (snapshot.connectionState == ConnectionState.waiting)
+            return Center();
+          if (!snapshot.hasData || snapshot.data == null) return Center();
 
           final data = snapshot.data!.data()!;
           final String fees = data['fees']?.toString() ?? '0';
-          final String exp = data['exp'].toString() ?? '0';
-          final String prov = data['province'].toString() ?? '0';
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage:
-                          (data['imageUrl'] != null &&
-                                  data['imageUrl'].isNotEmpty)
-                              ? NetworkImage(data['imageUrl'])
-                              : AssetImage('assets/images/brad.webp')
-                                  as ImageProvider,
+          final String exp = data['exp']?.toString() ?? '0';
+          final String prov = data['province']?.toString() ?? 'Unknown';
+
+          return LiquidPullToRefresh(
+            onRefresh: _handleRefresh,
+            showChildOpacityTransition: false,
+            color: Color.fromARGB(255, 224, 191, 109),
+            backgroundColor: Colors.white,
+            animSpeedFactor: 2.0,
+            height: 90,
+            child: SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    SizedBox(height: 16),
-                    Text(
-                      data['name'],
-                      style: GoogleFonts.lato(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundImage:
+                                    (data['imageUrl'] != null &&
+                                            data['imageUrl'].isNotEmpty)
+                                        ? NetworkImage(data['imageUrl'])
+                                        : AssetImage('assets/images/brad.webp')
+                                            as ImageProvider,
+                              ),
+                              SizedBox(width: 16),
+                              Expanded(
+                                flex: 3,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      data['name'],
+                                      style: GoogleFonts.lato(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      data['specialization'] ?? 'Unknown',
+                                      style: GoogleFonts.lato(
+                                        fontSize: 16,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 13),
+                          Divider(height: 24, thickness: 1.2),
+                          _infoRow(
+                            Icons.work_history,
+                            'Years of Experience: $exp',
+                          ),
+                          _infoRow(Icons.location_city, 'Province: $prov'),
+                          _infoRow(
+                            Icons.monetization_on,
+                            'Consultation Fee: \$$fees',
+                            color: Colors.green,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            data['desc'] ?? 'No description available.',
+                            style: GoogleFonts.lato(fontSize: 14, height: 1.5),
+                          ),
+                          SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: _showRequestDialog,
+                            icon: Icon(Icons.calendar_today),
+                            label: Text('Request Consultation'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              textStyle: GoogleFonts.lato(fontSize: 16),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      data['specialization'] ?? 'Unknown',
-                      style: GoogleFonts.lato(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'Reviews',
+                    style: GoogleFonts.lato(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Divider(height: 32, thickness: 1.2),
-                    _infoRow(
-                      Icons.work_history,
-                      'years of experince: ${exp}',
-                      color: const Color.fromARGB(255, 0, 0, 0),
-                    ),
-                    _infoRow(
-                      Icons.location_city,
-                      'province: ${prov}',
-                      color: const Color.fromARGB(255, 0, 0, 0),
-                    ),
-                    _infoRow(
-                      Icons.monetization_on,
-                      'Consultation Fee: \$${fees}',
-                      color: Colors.green,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      data['desc'] ?? 'No description available.',
-                      style: GoogleFonts.lato(fontSize: 16, height: 1.5),
-                    ),
-                    SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _showRequestDialog,
-                      icon: Icon(Icons.calendar_today),
-                      label: Text('Request Consultation'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
-                        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        textStyle: GoogleFonts.lato(fontSize: 16),
-                      ),
-                    ),
-                    LawyerReviewsWidget(lawyerId: data['uid']),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 10),
+                  LawyerReviewsWidget(lawyerId: data['uid']),
+                ],
               ),
             ),
           );
         },
       ),
     );
+  }
+
+  Future<void> _handleRefresh() async {
+    // Simulate network call
+    await Future.delayed(Duration(milliseconds: 300));
+    setState(() {});
   }
 }

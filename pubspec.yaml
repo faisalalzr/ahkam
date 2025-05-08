@@ -45,6 +45,10 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   supabase_flutter: ^2.9.0
   image_picker: ^1.1.2
+  shimmer: ^3.0.0
+  liquid_pull_to_refresh: ^3.0.1
+  url_launcher: ^6.2.5
+  file_picker: ^6.1.1
 
 dev_dependencies:
   flutter_test:

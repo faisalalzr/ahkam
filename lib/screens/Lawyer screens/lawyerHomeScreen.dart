@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-
 import '../../widgets/lawsuitcard.dart';
 
 class LawyerHomeScreen extends StatefulWidget {
@@ -26,6 +25,7 @@ class LawyerHomeScreen extends StatefulWidget {
 class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   var _selectedIndex = 3;
+  String? selectedStatus = 'Active';
 
   Future<List<Map<String, dynamic>>> fetchThisLawyer() async {
     QuerySnapshot querySnapshot =
@@ -63,15 +63,11 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 DrawerHeader(
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        height: 50,
-                        width: 100,
-                        "assets/images/ehkaam-seeklogo.png",
-                        fit: BoxFit.contain,
-                      ),
-                    ],
+                  child: Image.asset(
+                    height: 50,
+                    width: 100,
+                    "assets/images/ehkaam-seeklogo.png",
+                    fit: BoxFit.contain,
                   ),
                 ),
                 ListTile(
@@ -91,14 +87,14 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
                   onTap: () => Get.to(AboutPage()),
                 ),
                 ListTile(
-                  leading: Icon(Icons.person, color: Colors.black),
+                  leading: Icon(Icons.more_vert_sharp, color: Colors.black),
                   title: Text(
-                    "Profile",
+                    "More services",
                     style: GoogleFonts.lato(fontSize: 17, color: Colors.black),
                   ),
                   onTap:
                       () => Get.to(
-                        lawyerProfileScreen(lawyer: widget.lawyer),
+                        Morelawyer(lawyer: widget.lawyer),
                         transition: Transition.noTransition,
                       ),
                 ),
@@ -124,49 +120,43 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
                     FutureBuilder<List<Map<String, dynamic>>>(
                       future: fetchThisLawyer(),
                       builder: (context, snapshot) {
-                        if (snapshot.hasError ||
-                            !snapshot.hasData ||
-                            snapshot.data!.isEmpty) {
-                          return Center();
-                        } else {
-                          final lawyerData = snapshot.data![0];
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              CircleAvatar(
-                                radius: 18,
-                                backgroundImage:
-                                    (lawyerData['imageUrl'] != null &&
-                                            lawyerData['imageUrl'].isNotEmpty)
-                                        ? NetworkImage(lawyerData['imageUrl'])
-                                        : AssetImage('assets/images/brad.webp')
-                                            as ImageProvider,
-                              ),
-                              SizedBox(width: 8),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Welcome",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    "${lawyerData['name'] ?? ''}",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return SizedBox();
                         }
+                        final lawyerData = snapshot.data![0];
+                        return Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundImage:
+                                  (lawyerData['imageUrl'] != null &&
+                                          lawyerData['imageUrl'].isNotEmpty)
+                                      ? NetworkImage(lawyerData['imageUrl'])
+                                      : AssetImage('assets/images/brad.webp')
+                                          as ImageProvider,
+                            ),
+                            SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Welcome",
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  "${lawyerData['name'] ?? ''}",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
                       },
                     ),
                   ],
@@ -217,20 +207,47 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    StatusBadge(
-                      label: 'Finished',
-                      color: Colors.green,
-                      icon: LucideIcons.checkCircle,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedStatus =
+                              selectedStatus == 'Finished' ? null : 'Finished';
+                        });
+                      },
+                      child: StatusBadge(
+                        label: 'Finished',
+                        color: Colors.green,
+                        icon: LucideIcons.checkCircle,
+                        isSelected: selectedStatus == 'Finished',
+                      ),
                     ),
-                    StatusBadge(
-                      label: 'Waiting',
-                      color: Colors.orange,
-                      icon: LucideIcons.timer,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedStatus =
+                              selectedStatus == 'Waiting' ? null : 'Waiting';
+                        });
+                      },
+                      child: StatusBadge(
+                        label: 'Waiting',
+                        color: Colors.orange,
+                        icon: LucideIcons.timer,
+                        isSelected: selectedStatus == 'Waiting',
+                      ),
                     ),
-                    StatusBadge(
-                      label: 'Active',
-                      color: Colors.blue,
-                      icon: LucideIcons.briefcase,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedStatus =
+                              selectedStatus == 'Active' ? null : 'Active';
+                        });
+                      },
+                      child: StatusBadge(
+                        label: 'Active',
+                        color: Colors.blue,
+                        icon: LucideIcons.briefcase,
+                        isSelected: selectedStatus == 'Active',
+                      ),
                     ),
                   ],
                 ),
@@ -246,18 +263,33 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
+                      }
+                      if (snapshot.hasError || !snapshot.hasData) {
                         return Center(child: Text('Error fetching requests'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Center(child: Text('No requests yet.'));
                       }
 
                       List<Map<String, dynamic>> requests = snapshot.data!;
 
+                      List<Map<String, dynamic>> filtered =
+                          requests.where((req) {
+                            if (selectedStatus == 'Active') {
+                              return req['status'] == 'Accepted';
+                            } else if (selectedStatus == 'Waiting') {
+                              return req['status'] == 'Pending';
+                            } else if (selectedStatus == 'Finished') {
+                              return req['Ended?'] == true;
+                            }
+                            return true;
+                          }).toList();
+
+                      if (filtered.isEmpty) {
+                        return Center(child: Text('No matching requests.'));
+                      }
+
                       return ListView.builder(
-                        itemCount: requests.length,
+                        itemCount: filtered.length,
                         itemBuilder: (context, index) {
-                          final request = requests[index];
+                          final request = filtered[index];
                           return GestureDetector(
                             onTap: () {
                               Get.to(
@@ -291,10 +323,7 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
             selectedItemColor: Colors.black,
             unselectedItemColor: Colors.grey,
             items: [
-              BottomNavigationBarItem(
-                icon: Icon(LucideIcons.plusCircle),
-                label: "more",
-              ),
+              BottomNavigationBarItem(icon: Icon(Icons.person), label: "more"),
               BottomNavigationBarItem(
                 icon: Icon(LucideIcons.wallet),
                 label: "Wallet",
@@ -321,7 +350,7 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
     switch (index) {
       case 0:
         Get.off(
-          () => Morelawyer(lawyer: widget.lawyer),
+          () => lawyerProfileScreen(lawyer: widget.lawyer),
           transition: Transition.noTransition,
         );
         break;
@@ -338,10 +367,6 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
         );
         break;
       case 3:
-        Get.off(
-          () => LawyerHomeScreen(lawyer: widget.lawyer),
-          transition: Transition.noTransition,
-        );
         break;
     }
   }
@@ -351,12 +376,14 @@ class StatusBadge extends StatelessWidget {
   final String label;
   final Color color;
   final IconData icon;
+  final bool isSelected;
 
   const StatusBadge({
     super.key,
     required this.label,
     required this.color,
     required this.icon,
+    this.isSelected = false,
   });
 
   @override
@@ -364,17 +391,20 @@ class StatusBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: isSelected ? color : color.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: color),
+          Icon(icon, size: 16, color: isSelected ? Colors.white : color),
           SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: isSelected ? Colors.white : color,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

@@ -33,7 +33,10 @@ class _NewState extends State<New> {
   final List<String> professions = [
     "Civil Law",
     "Criminal Law",
-    "Corporate Law"
+    "Commercial Law",
+    "Labor Law",
+    "Insurance Law",
+    "International Law",
   ];
   String? _selectedProfession;
 
@@ -42,7 +45,7 @@ class _NewState extends State<New> {
     "Zarqaa",
     "ma'an",
     "Irbid",
-    "Aqaba"
+    "Aqaba",
   ];
   String? _selectedprovinces;
   bool isSubmitting = false;
@@ -65,7 +68,7 @@ class _NewState extends State<New> {
                   color: Colors.black12,
                   blurRadius: 12,
                   offset: Offset(0, 6),
-                )
+                ),
               ],
             ),
             child: Column(
@@ -85,23 +88,32 @@ class _NewState extends State<New> {
                 const SizedBox(height: 20),
                 _buildTextField("Full Name", _nameController),
                 const SizedBox(height: 15),
-                _buildTextField("Phone Number", _phoneController,
-                    keyboardType: TextInputType.phone),
+                _buildTextField(
+                  "Phone Number",
+                  _phoneController,
+                  keyboardType: TextInputType.phone,
+                ),
                 if (isLawyer) ...[
                   const SizedBox(height: 15),
                   _buildDropdownField("Profession", _selectedProfession),
                   const SizedBox(height: 15),
                   _buildDropdownFieldprov("Province", _selectedprovinces),
                   const SizedBox(height: 15),
-                  _buildTextField("Years of Experience", _experienceController,
-                      keyboardType: TextInputType.number),
+                  _buildTextField(
+                    "Years of Experience",
+                    _experienceController,
+                    keyboardType: TextInputType.number,
+                  ),
                   const SizedBox(height: 15),
                   _buildTextField("License Number", _licenseController),
                   const SizedBox(height: 15),
                   _buildTextField("Description", _descController),
                   const SizedBox(height: 15),
-                  _buildTextField("Consultation Fee", _feesController,
-                      keyboardType: TextInputType.number),
+                  _buildTextField(
+                    "Consultation Fee",
+                    _feesController,
+                    keyboardType: TextInputType.number,
+                  ),
                 ],
                 const SizedBox(height: 25),
                 isSubmitting
@@ -145,20 +157,24 @@ class _NewState extends State<New> {
                 color: const Color.fromARGB(255, 112, 84, 0).withOpacity(0.5),
                 blurRadius: 10,
                 offset: Offset(0, 4),
-              )
+              ),
           ],
           border: Border.all(
-            color: selected
-                ? const Color.fromARGB(255, 100, 65, 0)
-                : Colors.grey.shade300,
+            color:
+                selected
+                    ? const Color.fromARGB(255, 100, 65, 0)
+                    : Colors.grey.shade300,
             width: 2,
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                size: 36, color: selected ? Colors.white : Colors.black87),
+            Icon(
+              icon,
+              size: 36,
+              color: selected ? Colors.white : Colors.black87,
+            ),
             const SizedBox(height: 10),
             Text(
               label,
@@ -182,21 +198,28 @@ class _NewState extends State<New> {
         backgroundColor: const Color.fromARGB(255, 116, 70, 0).withOpacity(0.2),
         backgroundImage:
             _selectedImage != null ? FileImage(_selectedImage!) : null,
-        child: _selectedImage == null
-            ? Icon(Icons.camera_alt,
-                color: const Color.fromARGB(255, 130, 69, 0), size: 30)
-            : null,
+        child:
+            _selectedImage == null
+                ? Icon(
+                  Icons.camera_alt,
+                  color: const Color.fromARGB(255, 130, 69, 0),
+                  size: 30,
+                )
+                : null,
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      {TextInputType? keyboardType}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    TextInputType? keyboardType,
+  }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      validator: (val) =>
-          val == null || val.isEmpty ? 'Please enter $label' : null,
+      validator:
+          (val) => val == null || val.isEmpty ? 'Please enter $label' : null,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
@@ -205,7 +228,9 @@ class _NewState extends State<New> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide(
-              color: const Color.fromARGB(255, 112, 73, 0), width: 2),
+            color: const Color.fromARGB(255, 112, 73, 0),
+            width: 2,
+          ),
         ),
       ),
     );
@@ -215,9 +240,10 @@ class _NewState extends State<New> {
     return DropdownButtonFormField<String>(
       value: value,
       onChanged: (val) => setState(() => _selectedProfession = val),
-      items: professions
-          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-          .toList(),
+      items:
+          professions
+              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+              .toList(),
       decoration: InputDecoration(
         labelText: label,
         filled: true,
@@ -235,9 +261,10 @@ class _NewState extends State<New> {
     return DropdownButtonFormField<String>(
       value: value,
       onChanged: (val) => setState(() => _selectedprovinces = val),
-      items: provinces
-          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-          .toList(),
+      items:
+          provinces
+              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+              .toList(),
       decoration: InputDecoration(
         labelText: label,
         filled: true,
@@ -259,8 +286,10 @@ class _NewState extends State<New> {
         backgroundColor: const Color.fromARGB(255, 121, 83, 0),
       ),
       onPressed: _submitForm,
-      child: const Text("Submit",
-          style: TextStyle(fontSize: 18, color: Colors.white)),
+      child: const Text(
+        "Submit",
+        style: TextStyle(fontSize: 18, color: Colors.white),
+      ),
     );
   }
 
@@ -330,9 +359,13 @@ class _NewState extends State<New> {
     final fileName = '$uid.jpg'; // Save using UID
     final path = 'profile_pics/$fileName';
 
-    final response = await supabase.storage.from('imagges').uploadBinary(
-        path, bytes,
-        fileOptions: const FileOptions(upsert: true));
+    final response = await supabase.storage
+        .from('imagges')
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
 
     print("Upload response: $response");
 
@@ -343,7 +376,8 @@ class _NewState extends State<New> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }

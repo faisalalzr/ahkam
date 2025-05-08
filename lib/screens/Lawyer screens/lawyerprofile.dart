@@ -1,15 +1,17 @@
-import 'package:ahakam_v8/models/account.dart';
 import 'package:ahakam_v8/models/lawyer.dart';
-import 'package:ahakam_v8/screens/home.dart';
+import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerHomeScreen.dart';
+import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerMessages.dart';
+import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerWalletScreen.dart';
 import 'package:ahakam_v8/screens/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class lawyerProfileScreen extends StatefulWidget {
   final Lawyer lawyer;
-
   const lawyerProfileScreen({super.key, required this.lawyer});
 
   @override
@@ -17,12 +19,13 @@ class lawyerProfileScreen extends StatefulWidget {
 }
 
 class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
-  FirebaseFirestore fyre = FirebaseFirestore.instance;
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  var _selectedIndex = 0;
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> getInfo() async {
     try {
       var querySnapshot =
-          await fyre
+          await firestore
               .collection('account')
               .where('email', isEqualTo: widget.lawyer.email)
               .limit(1)
@@ -31,144 +34,286 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
       if (querySnapshot.docs.isNotEmpty) {
         return querySnapshot.docs.first;
       }
-      return null; // Return null if no document is found
+      return null;
     } catch (e) {
       print("Error fetching profile data: $e");
       return null;
     }
   }
 
-  Future<void> updateInfo() async {}
+  void onItemTapped(int index) {
+    if (_selectedIndex == index) return;
+    setState(() => _selectedIndex = index);
+    switch (index) {
+      case 0:
+        Get.off(() => lawyerProfileScreen(lawyer: widget.lawyer));
+        break;
+      case 1:
+        Get.off(
+          () => LawyerWalletScreen(lawyer: widget.lawyer),
+          transition: Transition.noTransition,
+        );
+        break;
+      case 2:
+        Get.off(
+          () => Lawyermessages(lawyer: widget.lawyer),
+          transition: Transition.noTransition,
+        );
+        break;
+      case 3:
+        Get.off(() => LawyerHomeScreen(lawyer: widget.lawyer));
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(Icons.arrow_back),
-        ),
-        title: Text("Profile"),
-        backgroundColor: Color(0xFFF5EEDC),
+        title: Text('Profile', style: GoogleFonts.poppins(color: Colors.black)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.black),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: onItemTapped,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.wallet),
+            label: "Wallet",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.messageCircle),
+            label: "Chat",
+          ),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: "Home"),
+        ],
       ),
       body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
         future: getInfo(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError ||
               snapshot.data == null ||
               !snapshot.data!.exists) {
-            return Center(child: Text("Error loading profile data."));
+            return const Center(child: Text("Error loading profile data."));
           }
 
-          var userData = snapshot.data!.data() ?? {};
+          final userData = snapshot.data!.data() ?? {};
 
           return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Profile Picture
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundImage:
-                        (userData['imageUrl'] != null &&
-                                userData['imageUrl'].isNotEmpty)
-                            ? NetworkImage(userData['imageUrl'])
-                            : AssetImage('assets/images/brad.webp')
-                                as ImageProvider,
-                    backgroundColor: Colors.grey[300],
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // Profile Card
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-
-                  SizedBox(height: 20),
-
-                  // User Name
-                  Text(
-                    userData['name'] ?? "No Name",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-
-                  // User Email
-                  Text(
-                    userData['email'] ?? "No Email",
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                  SizedBox(height: 30),
-
-                  // User Details Card
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 20,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          ListTile(
-                            trailing: IconButton(
-                              icon: Icon(Icons.edit, size: 25),
-                              onPressed: () {},
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundImage:
+                                  (userData['imageUrl'] != null &&
+                                          userData['imageUrl'].isNotEmpty)
+                                      ? NetworkImage(userData['imageUrl'])
+                                      : AssetImage('assets/images/brad.webp')
+                                          as ImageProvider,
                             ),
-                            leading: Icon(Icons.phone, color: Colors.black),
-                            title: Text("Phone Number"),
-                            subtitle: Text(
-                              userData['number'] ?? "Not provided",
-                              style: TextStyle(color: Colors.grey[600]),
+                            SizedBox(width: 16),
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    userData['name'],
+                                    style: GoogleFonts.lato(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    userData['specialization'] ?? 'Unknown',
+                                    style: GoogleFonts.lato(
+                                      fontSize: 16,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          Divider(),
-                          ListTile(
-                            leading: Icon(
-                              Icons.calendar_today,
-                              color: Colors.black,
-                            ),
-                            title: Text("Joined Date"),
-                            subtitle: Text(
-                              userData['joinedDate'] ?? "Unknown",
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 30),
-
-                  // Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        await FirebaseAuth.instance.signOut();
-                        Get.off(LoginScreen());
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          ],
                         ),
-                      ),
-                      child: Text(
-                        "Logout",
-                        style: TextStyle(fontSize: 16, color: Colors.white),
+                        SizedBox(height: 13),
+                        Divider(height: 24, thickness: 1.2),
+                        _infoRow(
+                          Icons.work_history,
+                          'Years of Experience: ${userData['exp']}',
+                        ),
+                        _infoRow(
+                          Icons.location_city,
+                          'Province: ${userData['province']}',
+                        ),
+                        _infoRow(
+                          Icons.monetization_on,
+                          'Consultation Fee: \$${userData['fees']}',
+                          color: Colors.green,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          userData['desc'] ?? 'No description available.',
+                          style: GoogleFonts.lato(fontSize: 14, height: 1.5),
+                        ),
+                        SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Stats Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildStatCard(
+                      "Balance",
+                      "0.0",
+                      Icons.account_balance_wallet,
+                    ),
+                    _buildStatCard("Cases", "10", Icons.gavel),
+                    _buildStatCard("Rating", "0.0", Icons.star),
+                  ],
+                ),
+                const SizedBox(height: 25),
+
+                // Options
+                _buildOptionCard(Icons.handshake, "Your cases", () {}),
+                _buildOptionCard(Icons.payment, "Payment", () {}),
+                _buildOptionCard(Icons.store, "Recommended", () {}),
+                const SizedBox(height: 20),
+
+                // Logout Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      Get.off(() => LoginScreen());
+                    },
+                    icon: const Icon(Icons.logout, color: Colors.red),
+                    label: Text(
+                      "Logout",
+                      style: GoogleFonts.poppins(color: Colors.red),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: color ?? Colors.black87),
+          SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: GoogleFonts.lato(fontSize: 14, color: Colors.black87),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon) {
+    return Expanded(
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 3,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              Icon(icon, color: Color(0xFF1E3A5F), size: 24),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionCard(IconData icon, String label, VoidCallback? onTap) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: const Color(0xFF1E3A5F)),
+        title: Text(label, style: GoogleFonts.poppins(fontSize: 15)),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class RequestsScreen extends StatefulWidget {
@@ -95,6 +96,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final String status = request['status'] ?? 'Unknown Status';
     final String formattedDate = getFormattedDate(request);
     final String time = request['time'];
+    final String rid = request['rid'];
     Future<DocumentSnapshot<Map<String, dynamic>>?> getinfo() async {
       var query =
           await FirebaseFirestore.instance
@@ -120,12 +122,20 @@ class _RequestsScreenState extends State<RequestsScreen> {
         if (snapshot.hasData == false || snapshot.hasError) return Center();
         var lawyerdata = snapshot.data!.data()!;
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 246, 236, 206),
-              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFFFF8F2),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.brown.withOpacity(0.1),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +147,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
-                        vertical: 6,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
                         color: statusColor,
@@ -146,43 +156,150 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       child: Text(
                         "Status: $status",
                         style: TextStyle(
-                          color: const Color.fromARGB(255, 0, 0, 0),
+                          color: const Color.fromARGB(255, 255, 255, 255),
                         ),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Get.to(
-                          MessagesScreen(account: widget.account),
-                          transition: Transition.noTransition,
-                        );
-                      },
-                      child:
-                          status == 'Accepted'
-                              ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromARGB(
-                                    255,
-                                    218,
-                                    209,
-                                    182,
-                                  ),
+                    if (status == 'Rejected' || status == 'Cancelled')
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () async {
+                          final query =
+                              await FirebaseFirestore.instance
+                                  .collection('requests')
+                                  .where('rid', isEqualTo: rid)
+                                  .limit(1)
+                                  .get();
 
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  "Go to chats",
-                                  style: TextStyle(
-                                    color: const Color.fromARGB(255, 0, 0, 0),
-                                  ),
-                                ),
-                              )
-                              : Center(),
-                    ),
+                          if (query.docs.isNotEmpty) {
+                            await FirebaseFirestore.instance
+                                .collection('requests')
+                                .doc(query.docs.first.id)
+                                .delete();
+                          }
+                        },
+                      ),
+
+                    if (status == 'Pending') ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (status == 'Pending')
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                              ),
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder:
+                                      (context) => AlertDialog(
+                                        title: const Text(
+                                          "Confirm Cancellation",
+                                        ),
+                                        content: const Text(
+                                          "Are you sure you want to cancel this request?",
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text(
+                                              "No",
+                                              style: TextStyle(
+                                                color: Color.fromARGB(
+                                                  255,
+                                                  0,
+                                                  0,
+                                                  0,
+                                                ),
+                                              ),
+                                            ),
+                                            onPressed:
+                                                () => Navigator.of(
+                                                  context,
+                                                ).pop(false),
+                                          ),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                            ),
+                                            child: const Text(
+                                              "Yes, Cancel",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            onPressed:
+                                                () => Navigator.of(
+                                                  context,
+                                                ).pop(true),
+                                          ),
+                                        ],
+                                      ),
+                                );
+
+                                if (confirm == true) {
+                                  try {
+                                    final query =
+                                        await FirebaseFirestore.instance
+                                            .collection('requests')
+                                            .where(
+                                              'userId',
+                                              isEqualTo: widget.account.uid,
+                                            )
+                                            .where('title', isEqualTo: title)
+                                            .where(
+                                              'lawyerName',
+                                              isEqualTo: lawyerName,
+                                            )
+                                            .limit(1)
+                                            .get();
+
+                                    if (query.docs.isNotEmpty) {
+                                      await query.docs.first.reference.update({
+                                        'status': 'Cancelled',
+                                      });
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Request cancelled'),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Failed to cancel request',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              child: const Text(
+                                "Cancel Request",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+
+                    status == 'Accepted'
+                        ? ElevatedButton(
+                          onPressed: () {
+                            Get.to(MessagesScreen(account: widget.account));
+                          },
+                          child: Text(
+                            'Go to chats',
+                            style: TextStyle(
+                              color: const Color.fromARGB(255, 0, 0, 0),
+                            ),
+                          ),
+                        )
+                        : Center(),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -219,7 +336,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 Divider(color: const Color.fromARGB(77, 0, 0, 0)),
                 const SizedBox(height: 8),
 
@@ -309,28 +426,36 @@ class _RequestsScreenState extends State<RequestsScreen> {
           ),
         ),
         centerTitle: true,
-        elevation: 0,
+
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         automaticallyImplyLeading: false,
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: fetchLawyerRequests(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError || snapshot.data == null) {
-            return const Center(child: Text("Error fetching requests"));
-          } else if (snapshot.data!.isEmpty) {
-            return const Center(child: Text("No requests sent."));
-          }
+      body: LiquidPullToRefresh(
+        onRefresh: _handleRefresh,
+        showChildOpacityTransition: false,
+        color: Color.fromARGB(255, 224, 191, 109),
+        backgroundColor: Colors.white,
+        animSpeedFactor: 2.0,
+        height: 90,
+        child: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: fetchLawyerRequests(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError || snapshot.data == null) {
+              return const Center(child: Text("Error fetching requests"));
+            } else if (snapshot.data!.isEmpty) {
+              return const Center(child: Text("No requests sent."));
+            }
 
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
-            itemBuilder: (context, index) {
-              return getRequestCard(snapshot.data![index]);
-            },
-          );
-        },
+            return ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (context, index) {
+                return getRequestCard(snapshot.data![index]);
+              },
+            );
+          },
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         showSelectedLabels: false,
@@ -353,5 +478,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleRefresh() async {
+    // Simulate network call
+    await Future.delayed(Duration(milliseconds: 200));
+    setState(() {});
   }
 }

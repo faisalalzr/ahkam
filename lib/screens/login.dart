@@ -58,9 +58,25 @@ class _LoginScreenState extends State<LoginScreen> {
           (userDoc.data() as Map<String, dynamic>?)?['isLawyer'] ?? false;
 
       if (isLawyer) {
-        Get.off(() => LawyerHomeScreen(lawyer: Lawyer(email: anyUser.email!)));
+        Get.off(
+          () => LawyerHomeScreen(
+            lawyer: Lawyer(
+              email: anyUser.email!,
+              name: userDoc['name'],
+              imageUrl: userDoc['imageUrl'],
+            ),
+          ),
+        );
       } else {
-        Get.off(() => HomeScreen(account: Account(email: anyUser.email!)));
+        Get.off(
+          () => HomeScreen(
+            account: Account(
+              email: anyUser.email!,
+              name: userDoc['name'],
+              imageUrl: userDoc['imageUrl'],
+            ),
+          ),
+        );
       }
     } catch (e) {
       _showError("Login failed: ${e.toString().split('] ').last}");

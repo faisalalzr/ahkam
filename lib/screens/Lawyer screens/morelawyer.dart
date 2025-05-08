@@ -89,30 +89,6 @@ class _MorelawyerState extends State<Morelawyer> {
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex, // Correct usage of _selectedIndex
-        onTap: onItemTapped,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.plusCircle),
-            label: "more",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.wallet),
-            label: "Wallet",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.messageCircle),
-            label: "Chat",
-          ),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: "Home"),
-        ],
-      ),
     );
   }
 

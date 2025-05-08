@@ -1,6 +1,7 @@
 import 'package:ahakam_v8/models/lawyer.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerHomeScreen.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerMessages.dart';
+import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerprofile.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/morelawyer.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -89,10 +90,7 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         items: [
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.plusCircle),
-            label: "more",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "more"),
           BottomNavigationBarItem(
             icon: Icon(LucideIcons.wallet),
             label: "Wallet",
@@ -278,7 +276,7 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
     switch (index) {
       case 0:
         Get.off(
-          () => Morelawyer(lawyer: widget.lawyer),
+          () => lawyerProfileScreen(lawyer: widget.lawyer),
           transition: Transition.noTransition,
         );
         break;

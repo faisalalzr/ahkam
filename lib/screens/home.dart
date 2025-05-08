@@ -9,6 +9,7 @@ import 'package:ahakam_v8/widgets/lawyer_card.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:get/get.dart';
 import '../widgets/category.dart';
@@ -147,15 +148,38 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Text(
-              'Welcome, ${widget.account.name ?? 'user'}',
-              style: GoogleFonts.lato(
-                textStyle: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 72, 47, 0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundImage: NetworkImage(widget.account!.imageUrl!),
                 ),
-              ),
+                SizedBox(width: 5),
+                Column(
+                  children: [
+                    Text(
+                      'Welcome,',
+                      style: GoogleFonts.lato(
+                        textStyle: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 0, 0, 0),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      ' ${widget.account.name ?? 'user'}',
+                      style: GoogleFonts.lato(
+                        textStyle: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 0, 0, 0),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
@@ -178,143 +202,155 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    Get.to(
-                      () => BrowseScreen('', account: widget.account),
-                      transition: Transition.downToUp,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutQuart,
-                    );
-                  },
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 65,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromARGB(128, 255, 224, 147),
-                            Color.fromARGB(121, 255, 214, 110),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          stops: [0.0, 0.8],
+      body: LiquidPullToRefresh(
+        onRefresh: _handleRefresh,
+        showChildOpacityTransition: false,
+        color: Color.fromARGB(255, 224, 191, 109),
+        backgroundColor: Colors.white,
+        animSpeedFactor: 2.0,
+        height: 90,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Get.to(
+                        () => BrowseScreen('', account: widget.account),
+                        transition: Transition.downToUp,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutQuart,
+                      );
+                    },
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 65,
                         ),
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color.fromARGB(128, 255, 224, 147),
+                              Color.fromARGB(121, 255, 214, 110),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            stops: [0.0, 0.8],
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_rounded,
-                            color: const Color.fromARGB(255, 0, 0, 0),
-                            size: 22,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            "Browse Lawyers",
-                            style: GoogleFonts.lato(
-                              fontSize: 18,
-                              color: const Color.fromARGB(255, 0, 0, 0),
-                              letterSpacing: 0.5,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_rounded,
+                              color: const Color.fromARGB(255, 0, 0, 0),
+                              size: 22,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              "Browse Lawyers",
+                              style: GoogleFonts.lato(
+                                fontSize: 18,
+                                color: const Color.fromARGB(255, 0, 0, 0),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 17),
-            Text(
-              "Categories",
-              style: GoogleFonts.lato(
-                textStyle: TextStyle(
-                  fontSize: 20,
-                  color: Color.fromARGB(255, 72, 47, 0),
+                ],
+              ),
+              SizedBox(height: 17),
+              Text(
+                "Categories",
+                style: GoogleFonts.lato(
+                  textStyle: TextStyle(
+                    fontSize: 20,
+                    color: Color.fromARGB(255, 72, 47, 0),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 10),
-            SizedBox(
-              height: 175,
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1.3,
+              SizedBox(height: 10),
+              SizedBox(
+                height: 175,
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.3,
+                  ),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    return CategoryCard(
+                      category: categories[index],
+                      account: widget.account,
+                    );
+                  },
                 ),
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  return CategoryCard(
-                    category: categories[index],
-                    account: widget.account,
+              ),
+              Text(
+                "Top Lawyers",
+                style: GoogleFonts.lato(
+                  textStyle: TextStyle(
+                    fontSize: 20,
+                    color: Color.fromARGB(255, 72, 47, 0),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              FutureBuilder<List<Lawyer>>(
+                future: Lawyer.getTopLawyers(limit: 2),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    ); // Loading spinner
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text("Error loading lawyers"));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: Text("No top-rated lawyers available"),
+                    );
+                  }
+
+                  List<Lawyer> topLawyers = snapshot.data!;
+                  return Column(
+                    children:
+                        topLawyers.map((lawyer) {
+                          return LawyerCard(
+                            lawyer: lawyer,
+                            account: widget.account,
+                          );
+                        }).toList(),
                   );
                 },
               ),
-            ),
-            Text(
-              "Top Lawyers",
-              style: GoogleFonts.lato(
-                textStyle: TextStyle(
-                  fontSize: 20,
-                  color: Color.fromARGB(255, 72, 47, 0),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            FutureBuilder<List<Lawyer>>(
-              future: Lawyer.getTopLawyers(limit: 2),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  ); // Loading spinner
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Error loading lawyers"));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text("No top-rated lawyers available"));
-                }
-
-                List<Lawyer> topLawyers = snapshot.data!;
-                return Column(
-                  children:
-                      topLawyers.map((lawyer) {
-                        return LawyerCard(
-                          lawyer: lawyer,
-                          account: widget.account,
-                        );
-                      }).toList(),
-                );
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -340,5 +376,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleRefresh() async {
+    // Simulate network call
+    await Future.delayed(Duration(milliseconds: 200));
+    setState(() {});
   }
 }

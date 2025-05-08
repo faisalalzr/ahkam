@@ -170,7 +170,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       !userSnapshot.data!.exists) {
                     return ListTile();
                   }
-
+                  final lawyerData = userSnapshot.data;
                   return Padding(
                     padding: const EdgeInsets.symmetric(
                       vertical: 8,
@@ -187,7 +187,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           horizontal: 20,
                         ),
                         title: Text(
-                          request["lawyerName"] ?? 'Unknown User',
+                          lawyerData?["name"] ?? 'Unknown User',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
@@ -195,19 +195,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                         leading: CircleAvatar(
-                          backgroundColor: Color.fromARGB(255, 136, 97, 0),
-                          child:
-                              request["pic"] ??
-                              Text(
-                                request["lawyerName"]
-                                        ?.substring(0, 1)
-                                        .toUpperCase() ??
-                                    'U',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                          backgroundImage: NetworkImage(
+                            lawyerData?["imageUrl"],
+                          ),
                         ),
                         onTap: () {
                           Get.to(
@@ -217,6 +207,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               senderId: request["userId"] ?? '',
                               receiverID: request["lawyerId"] ?? '',
                               rid: request['rid'] ?? '',
+                              imageurl: lawyerData?["imageUrl"] ?? '',
                             ),
                           );
                         },
