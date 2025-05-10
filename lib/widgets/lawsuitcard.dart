@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../screens/Lawyer screens/lawSuitDetails.dart';
 
 class LawsuitCard extends StatefulWidget {
   final String title;
   final String status;
+  final bool ended;
   final String rid;
   final String username;
   final String date;
@@ -20,6 +22,7 @@ class LawsuitCard extends StatefulWidget {
     required this.username,
     required this.date,
     required this.time,
+    required this.ended,
   });
 
   @override
@@ -30,17 +33,19 @@ class _LawsuitCardState extends State<LawsuitCard> {
   FirebaseFirestore fyre = FirebaseFirestore.instance;
   String? requestId;
   String? status;
-  String? userImageUrl; // URL of the user profile pic
+  String? userImageUrl;
+  String consultationDuration = '';
 
   @override
   void initState() {
     super.initState();
     status = widget.status;
     fetchRequestId();
+    fetchConsultationDuration();
+    fetchUserPic();
   }
 
-  /// Fetch user profile picture URL from Firestore
-  Future<String?> fetchUserPic() async {
+  Future<void> fetchUserPic() async {
     try {
       var querySnapshot =
           await fyre
@@ -51,15 +56,15 @@ class _LawsuitCardState extends State<LawsuitCard> {
 
       if (querySnapshot.docs.isNotEmpty) {
         var data = querySnapshot.docs.first.data();
-        return data['imageUrl'] ?? null;
+        setState(() {
+          userImageUrl = data['imageUrl'] ?? '';
+        });
       }
     } catch (e) {
       print("Error fetching user pic: $e");
     }
-    return null;
   }
 
-  /// Fetch the Firestore document ID for this request
   Future<void> fetchRequestId() async {
     try {
       var querySnapshot =
@@ -71,28 +76,37 @@ class _LawsuitCardState extends State<LawsuitCard> {
 
       if (querySnapshot.docs.isNotEmpty) {
         requestId = querySnapshot.docs.first.id;
-        setState(() {}); // optional
+        setState(() {});
       }
     } catch (e) {
       print("Error fetching request ID: $e");
     }
   }
 
-  /// Update request status in Firestore
-  Future<void> updateRequestStatus(String newStatus) async {
-    if (requestId == null) return;
-
+  Future<void> fetchConsultationDuration() async {
     try {
-      await fyre.collection('requests').doc(requestId).update({
-        'status': newStatus,
-      });
-      if (mounted) {
+      var querySnapshot =
+          await fyre
+              .collection('requests')
+              .where('rid', isEqualTo: widget.rid)
+              .limit(1)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        var data = querySnapshot.docs.first.data();
+        Timestamp startTimestamp = data['timestamp'];
+        Duration duration = DateTime.now().difference(startTimestamp.toDate());
+
+        final hours = duration.inHours;
+        final minutes = duration.inMinutes % 60;
+
         setState(() {
-          status = newStatus;
+          consultationDuration =
+              '${hours > 0 ? '$hours hr${hours > 1 ? 's' : ''} ' : ''}${minutes > 0 ? '$minutes min${minutes > 1 ? 's' : ''}' : ''}';
         });
       }
     } catch (e) {
-      print("Error updating Firestore: $e");
+      print("Error fetching consultation duration: $e");
     }
   }
 
@@ -100,23 +114,25 @@ class _LawsuitCardState extends State<LawsuitCard> {
   Widget build(BuildContext context) {
     Color statusColor =
         status == 'Accepted'
-            ? const Color.fromARGB(255, 76, 175, 79)
+            ? const Color.fromARGB(255, 75, 174, 80)
             : status == 'Pending'
-            ? const Color.fromARGB(255, 255, 153, 0)
-            : Colors.red;
+            ? const Color.fromRGBO(255, 196, 0, 1)
+            : status == 'Rejected'
+            ? const Color.fromARGB(255, 255, 22, 22)
+            : Colors.black;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E3A5F),
-          borderRadius: BorderRadius.circular(16),
-        ),
+    return Card(
+      elevation: 8,
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shadowColor: const Color.fromARGB(255, 0, 35, 73).withOpacity(0.2),
+
+      child: Padding(
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status and View Details
+            /// Status + View Details
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -130,106 +146,119 @@ class _LawsuitCardState extends State<LawsuitCard> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "Status: $status",
-                    style: TextStyle(color: Colors.white),
+                    "Status: ${widget.ended == false ? status : 'Finished'} ",
+                    style: GoogleFonts.lato(color: Colors.white),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
+                ElevatedButton(
+                  onPressed: () {
                     Get.to(
                       Lawsuit(rid: widget.rid),
                       transition: Transition.downToUp,
                     );
                   },
-                  child: Container(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+                    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                      horizontal: 10,
+                      vertical: 8,
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 14, 32, 41),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      "View details",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    textStyle: GoogleFonts.lato(fontSize: 12),
                   ),
+                  child: Text("View Details", style: GoogleFonts.lato()),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
 
-            // 👤 FutureBuilder for user image + name + title
-            FutureBuilder<String?>(
-              future: fetchUserPic(),
-              builder: (context, snapshot) {
-                String imageUrl = snapshot.data ?? ''; // default fallback image
-
-                return Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundImage:
-                          (imageUrl != null && imageUrl.isNotEmpty)
-                              ? NetworkImage(imageUrl)
-                              : AssetImage('assets/images/brad.webp')
-                                  as ImageProvider,
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.username,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          widget.title,
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 16),
-            Divider(color: Colors.white30),
-            const SizedBox(height: 8),
-
-            // 📅 Date & Time
+            /// User Info
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Case : Online consultation",
-                  style: TextStyle(
-                    color: const Color.fromARGB(237, 255, 255, 255),
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage:
+                      userImageUrl != null && userImageUrl!.isNotEmpty
+                          ? NetworkImage(userImageUrl!)
+                          : const AssetImage('assets/images/brad.webp')
+                              as ImageProvider,
+                  backgroundColor: Colors.grey[300],
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.username,
+                        style: GoogleFonts.lato(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.title,
+                        style: GoogleFonts.lato(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            Divider(color: Colors.brown.shade200),
+            const SizedBox(height: 8),
+
+            /// Case Info
+            Text(
+              "Case: Online Consultation",
+              style: GoogleFonts.lato(
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.calendar_today, color: Colors.white70, size: 16),
-                SizedBox(width: 4),
+                const Icon(Icons.calendar_today, size: 16, color: Colors.black),
+                const SizedBox(width: 4),
                 Text(
-                  "${widget.date.substring(0, 10)}",
-                  style: TextStyle(color: Colors.white70),
+                  widget.date.substring(0, 10),
+                  style: GoogleFonts.lato(color: Colors.black),
                 ),
-                SizedBox(width: 16),
-                Icon(Icons.access_time, color: Colors.white70, size: 16),
-                SizedBox(width: 4),
-                Text("${widget.time}", style: TextStyle(color: Colors.white70)),
+                const SizedBox(width: 16),
+                const Icon(Icons.access_time, size: 16, color: Colors.black),
+                const SizedBox(width: 4),
+                Text(widget.time, style: GoogleFonts.lato(color: Colors.black)),
               ],
             ),
+            if (consultationDuration.isNotEmpty && widget.ended == false) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.timer, size: 16, color: Colors.black),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      "Duration: $consultationDuration",
+                      style: GoogleFonts.lato(color: Colors.black),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

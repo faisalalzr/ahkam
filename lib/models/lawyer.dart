@@ -19,7 +19,7 @@ class Lawyer extends Account {
   @override
   bool? isLawyer;
   final String? desc;
-  final String? fees;
+  final int? fees;
   final String? imageUrl;
 
   Lawyer({

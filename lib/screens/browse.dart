@@ -88,12 +88,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
         ),
         centerTitle: true,
         elevation: 1,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(Icons.arrow_back_ios_new, size: 17),
-        ),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Icon(Icons.filter_list_alt, size: 22, color: Colors.black),
@@ -150,7 +145,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                 if (lawyers.isEmpty) {
                   return Center(
                     child: Text(
-                      'No lawyers found matching your search.',
+                      '',
                       style: TextStyle(fontSize: 16, color: Colors.black54),
                     ),
                   );

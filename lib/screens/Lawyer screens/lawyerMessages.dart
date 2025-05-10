@@ -69,7 +69,7 @@ class _LawyermessagesScreenState extends State<Lawyermessages> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
-        toolbarHeight: 40,
+        toolbarHeight: 70,
         title: Text(
           "Messages",
           style: GoogleFonts.lato(
@@ -82,12 +82,6 @@ class _LawyermessagesScreenState extends State<Lawyermessages> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search, color: const Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: _buildUserList(),
       bottomNavigationBar: _buildBottomNavBar(),

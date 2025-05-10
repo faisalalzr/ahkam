@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:ahakam_v8/screens/Lawyer%20screens/endchat.dart';
 import 'package:ahakam_v8/services/auth_service.dart';
 import 'package:ahakam_v8/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -124,33 +125,53 @@ class _ChatScreenState extends State<Lawyerchat> {
           icon: Icon(Icons.arrow_back_ios_new, color: Colors.black),
           onPressed: () => Get.back(),
         ),
-      ),
-      body: Column(
-        children: [
-          if (isLawyer && !hasEnded)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  if (requestRef != null) {
-                    await requestRef!.update({'ended?': true});
+        actions: [
+          IconButton(
+            icon: Icon(Icons.info_outline, color: Colors.black),
+            onPressed: () {
+              Get.to(
+                transition: Transition.rightToLeft,
+                () => ConsultationDetailsScreen(
+                  rid: widget.rid,
+                  requestRef: requestRef,
+                  onEnded: () {
                     setState(() {
                       hasEnded = true;
                     });
-                    Get.snackbar(
-                      "Consultation Ended",
-                      "The chat is now closed.",
-                    );
-                  }
-                },
-                icon: Icon(Icons.stop_circle),
-                label: Text("End Consultation"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
+                  },
                 ),
-              ),
-            ),
+              );
+            },
+          ),
+        ],
+      ),
+
+      body: Column(
+        children: [
+          // if (isLawyer && !hasEnded)
+          //   Padding(
+          //     padding: const EdgeInsets.all(8.0),
+          //     child: ElevatedButton.icon(
+          //       onPressed: () async {
+          //         if (requestRef != null) {
+          //           await requestRef!.update({'ended?': true});
+          //           setState(() {
+          //             hasEnded = true;
+          //           });
+          //           Get.snackbar(
+          //             "Consultation Ended",
+          //             "The chat is now closed.",
+          //           );
+          //         }
+          //       },
+          //       icon: Icon(Icons.stop_circle),
+          //       label: Text("End Consultation"),
+          //       style: ElevatedButton.styleFrom(
+          //         backgroundColor: Colors.red,
+          //         foregroundColor: Colors.white,
+          //       ),
+          //     ),
+          //   ),
           Expanded(child: buildMessageList()),
           buildMessageInputField(),
         ],

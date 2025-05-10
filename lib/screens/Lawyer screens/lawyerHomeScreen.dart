@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../widgets/lawsuitcard.dart';
 
@@ -31,7 +32,7 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
     QuerySnapshot querySnapshot =
         await _firestore
             .collection('account')
-            .where('email', isEqualTo: widget.lawyer.email)
+            .where('uid', isEqualTo: widget.lawyer.uid)
             .limit(1)
             .get();
 
@@ -125,6 +126,7 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
                         }
                         final lawyerData = snapshot.data![0];
                         return Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             CircleAvatar(
                               radius: 18,
@@ -140,17 +142,10 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Welcome",
-                                  style: TextStyle(
+                                  "Welcome, ${lawyerData['name'] ?? ''}",
+                                  style: GoogleFonts.lato(
+                                    color: const Color.fromARGB(255, 0, 0, 0),
                                     fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "${lawyerData['name'] ?? ''}",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
@@ -163,15 +158,6 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
                 ),
                 Row(
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.info_outline),
-                      onPressed: () {
-                        Get.to(
-                          DisclaimerPage(),
-                          transition: Transition.rightToLeft,
-                        );
-                      },
-                    ),
                     Stack(
                       children: [
                         Icon(Icons.notifications_none, size: 28),
@@ -193,125 +179,144 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
             foregroundColor: Colors.black,
             centerTitle: false,
           ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 20),
-                Text(
-                  'Case Status',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedStatus =
-                              selectedStatus == 'Finished' ? null : 'Finished';
-                        });
-                      },
-                      child: StatusBadge(
-                        label: 'Finished',
-                        color: Colors.green,
-                        icon: LucideIcons.checkCircle,
-                        isSelected: selectedStatus == 'Finished',
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedStatus =
-                              selectedStatus == 'Waiting' ? null : 'Waiting';
-                        });
-                      },
-                      child: StatusBadge(
-                        label: 'Waiting',
-                        color: Colors.orange,
-                        icon: LucideIcons.timer,
-                        isSelected: selectedStatus == 'Waiting',
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedStatus =
-                              selectedStatus == 'Active' ? null : 'Active';
-                        });
-                      },
-                      child: StatusBadge(
-                        label: 'Active',
-                        color: Colors.blue,
-                        icon: LucideIcons.briefcase,
-                        isSelected: selectedStatus == 'Active',
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Consultation Requests',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 10),
-                Expanded(
-                  child: FutureBuilder<List<Map<String, dynamic>>>(
-                    future: fetchRequests(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError || !snapshot.hasData) {
-                        return Center(child: Text('Error fetching requests'));
-                      }
+          body: LiquidPullToRefresh(
+            onRefresh: () async {
+              setState(() {}); // Simply triggers a rebuild to re-fetch the data
+            },
+            height: 120,
+            animSpeedFactor: 2.0,
+            color: Theme.of(context).primaryColor,
+            backgroundColor: Colors.white,
+            showChildOpacityTransition: false,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 10),
 
-                      List<Map<String, dynamic>> requests = snapshot.data!;
-
-                      List<Map<String, dynamic>> filtered =
-                          requests.where((req) {
-                            if (selectedStatus == 'Active') {
-                              return req['status'] == 'Accepted';
-                            } else if (selectedStatus == 'Waiting') {
-                              return req['status'] == 'Pending';
-                            } else if (selectedStatus == 'Finished') {
-                              return req['Ended?'] == true;
-                            }
-                            return true;
-                          }).toList();
-
-                      if (filtered.isEmpty) {
-                        return Center(child: Text('No matching requests.'));
-                      }
-
-                      return ListView.builder(
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final request = filtered[index];
-                          return GestureDetector(
-                            onTap: () {
-                              Get.to(
-                                Lawsuit(rid: request['rid']),
-                                transition: Transition.downToUp,
-                              );
-                            },
-                            child: LawsuitCard(
-                              status: request['status'],
-                              title: request['title'],
-                              rid: request['rid'],
-                              username: request['username'],
-                              date: request['date'],
-                              time: request['time'],
-                            ),
-                          );
-                        },
-                      );
-                    },
+                  Text(
+                    'Case Status',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ),
-              ],
+
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedStatus =
+                                selectedStatus == 'Finished'
+                                    ? null
+                                    : 'Finished';
+                          });
+                        },
+                        child: StatusBadge(
+                          label: 'Finished',
+                          color: Color(0xFF4CAF50), // Calm Green
+                          icon: LucideIcons.checkCircle,
+                          isSelected: selectedStatus == 'Finished',
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedStatus =
+                                selectedStatus == 'Waiting' ? null : 'Waiting';
+                          });
+                        },
+                        child: StatusBadge(
+                          label: 'Waiting',
+                          color: Color(0xFFFFC107), // Warm Amber
+                          icon: LucideIcons.timer,
+                          isSelected: selectedStatus == 'Waiting',
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedStatus =
+                                selectedStatus == 'Active' ? null : 'Active';
+                          });
+                        },
+                        child: StatusBadge(
+                          label: 'Active',
+                          color: Color(
+                            0xFF1E3A5F,
+                          ), // Deep Blue to match your app's tone
+                          icon: LucideIcons.briefcase,
+                          isSelected: selectedStatus == 'Active',
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 30),
+                  Text(
+                    'Consultation Requests',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+                  Expanded(
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: fetchRequests(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError || !snapshot.hasData) {
+                          return Center(child: Text('Error fetching requests'));
+                        }
+
+                        List<Map<String, dynamic>> requests = snapshot.data!;
+
+                        List<Map<String, dynamic>> filtered =
+                            requests.where((req) {
+                              if (selectedStatus == 'Active') {
+                                return req['status'] == 'Accepted' &&
+                                    req['ended?'] == false;
+                              } else if (selectedStatus == 'Waiting') {
+                                return req['status'] == 'Pending';
+                              } else if (selectedStatus == 'Finished') {
+                                return req['ended?'] == true;
+                              }
+                              return true;
+                            }).toList();
+
+                        if (filtered.isEmpty) {
+                          return Center(child: Text('No requests'));
+                        }
+
+                        return ListView.builder(
+                          itemCount: filtered.length,
+                          itemBuilder: (context, index) {
+                            final request = filtered[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Get.to(
+                                  Lawsuit(rid: request['rid']),
+                                  transition: Transition.downToUp,
+                                );
+                              },
+                              child: LawsuitCard(
+                                status: request['status'],
+                                title: request['title'],
+                                rid: request['rid'],
+                                username: request['username'],
+                                date: request['date'],
+                                time: request['time'],
+                                ended: request['ended?'],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           bottomNavigationBar: BottomNavigationBar(

@@ -47,7 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icon(Icons.arrow_back),
         ),
         title: Text("Profile"),
-        backgroundColor: Color(0xFFF5EEDC),
+        backgroundColor: Color.fromARGB(255, 255, 255, 254),
         elevation: 0,
         actions: [
           IconButton(

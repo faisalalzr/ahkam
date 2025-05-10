@@ -340,8 +340,8 @@ class _NewState extends State<New> {
           province: _selectedprovinces,
           isLawyer: true,
           desc: _descController.text,
-          fees: _feesController.text,
-          imageUrl: imageUrl, // add this
+          fees: _feesController.text as int,
+          imageUrl: imageUrl,
         );
         await lawyer.addToFirestore();
         Get.to(LawyerHomeScreen(lawyer: lawyer));

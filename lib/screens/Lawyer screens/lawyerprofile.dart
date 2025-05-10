@@ -1,14 +1,17 @@
 import 'package:ahakam_v8/models/lawyer.dart';
+import 'package:ahakam_v8/screens/Lawyer%20screens/editlawprofile.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerHomeScreen.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerMessages.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerWalletScreen.dart';
 import 'package:ahakam_v8/screens/login.dart';
+import 'package:ahakam_v8/widgets/reviewWidget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 
 class lawyerProfileScreen extends StatefulWidget {
   final Lawyer lawyer;
@@ -46,7 +49,10 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
     setState(() => _selectedIndex = index);
     switch (index) {
       case 0:
-        Get.off(() => lawyerProfileScreen(lawyer: widget.lawyer));
+        Get.off(
+          () => lawyerProfileScreen(lawyer: widget.lawyer),
+          transition: Transition.noTransition,
+        );
         break;
       case 1:
         Get.off(
@@ -61,7 +67,10 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
         );
         break;
       case 3:
-        Get.off(() => LawyerHomeScreen(lawyer: widget.lawyer));
+        Get.off(
+          () => LawyerHomeScreen(lawyer: widget.lawyer),
+          transition: Transition.noTransition,
+        );
         break;
     }
   }
@@ -78,7 +87,12 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.black),
-            onPressed: () {},
+            onPressed: () {
+              Get.to(
+                () => EditLawyerProfileScreen(lawyer: widget.lawyer),
+                transition: Transition.rightToLeft,
+              );
+            },
           ),
         ],
       ),
@@ -90,6 +104,7 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
+
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(
@@ -118,135 +133,168 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
 
           final userData = snapshot.data!.data() ?? {};
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                // Profile Card
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 20,
+          return LiquidPullToRefresh(
+            onRefresh: () async {
+              setState(() {}); // Re-fetch the data
+              await Future.delayed(Duration(milliseconds: 300));
+            },
+            color: const Color.fromARGB(255, 0, 52, 142),
+            backgroundColor: Colors.white,
+            height: 140,
+            animSpeedFactor: 2,
+            showChildOpacityTransition: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  // Profile Card
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundImage:
-                                  (userData['imageUrl'] != null &&
-                                          userData['imageUrl'].isNotEmpty)
-                                      ? NetworkImage(userData['imageUrl'])
-                                      : AssetImage('assets/images/brad.webp')
-                                          as ImageProvider,
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              flex: 3,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    userData['name'],
-                                    style: GoogleFonts.lato(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    userData['specialization'] ?? 'Unknown',
-                                    style: GoogleFonts.lato(
-                                      fontSize: 16,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                ],
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundImage:
+                                    (userData['imageUrl'] != null &&
+                                            userData['imageUrl'].isNotEmpty)
+                                        ? NetworkImage(userData['imageUrl'])
+                                        : const AssetImage(
+                                              'assets/images/brad.webp',
+                                            )
+                                            as ImageProvider,
                               ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 13),
-                        Divider(height: 24, thickness: 1.2),
-                        _infoRow(
-                          Icons.work_history,
-                          'Years of Experience: ${userData['exp']}',
-                        ),
-                        _infoRow(
-                          Icons.location_city,
-                          'Province: ${userData['province']}',
-                        ),
-                        _infoRow(
-                          Icons.monetization_on,
-                          'Consultation Fee: \$${userData['fees']}',
-                          color: Colors.green,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          userData['desc'] ?? 'No description available.',
-                          style: GoogleFonts.lato(fontSize: 14, height: 1.5),
-                        ),
-                        SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Stats Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatCard(
-                      "Balance",
-                      "0.0",
-                      Icons.account_balance_wallet,
-                    ),
-                    _buildStatCard("Cases", "10", Icons.gavel),
-                    _buildStatCard("Rating", "0.0", Icons.star),
-                  ],
-                ),
-                const SizedBox(height: 25),
-
-                // Options
-                _buildOptionCard(Icons.handshake, "Your cases", () {}),
-                _buildOptionCard(Icons.payment, "Payment", () {}),
-                _buildOptionCard(Icons.store, "Recommended", () {}),
-                const SizedBox(height: 20),
-
-                // Logout Button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
-                      Get.off(() => LoginScreen());
-                    },
-                    icon: const Icon(Icons.logout, color: Colors.red),
-                    label: Text(
-                      "Logout",
-                      style: GoogleFonts.poppins(color: Colors.red),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                              SizedBox(width: 16),
+                              Expanded(
+                                flex: 3,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      userData['name'],
+                                      style: GoogleFonts.lato(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      userData['specialization'] ?? 'Unknown',
+                                      style: GoogleFonts.lato(
+                                        fontSize: 16,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 13),
+                          Divider(height: 24, thickness: 1.2),
+                          _infoRow(
+                            Icons.work_history,
+                            'Years of Experience: ${userData['exp']}',
+                          ),
+                          _infoRow(
+                            Icons.location_city,
+                            'Province: ${userData['province']}',
+                          ),
+                          _infoRow(
+                            Icons.monetization_on,
+                            'Consultation Fee: \$${userData['fees']}',
+                            color: Colors.green,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            userData['desc'] ?? 'No description available.',
+                            style: GoogleFonts.lato(fontSize: 14, height: 1.5),
+                          ),
+                          SizedBox(height: 24),
+                        ],
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 30),
-              ],
+
+                  const SizedBox(height: 20),
+
+                  // Stats Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatCard("Balance", "0.0", LucideIcons.wallet),
+                      _buildStatCard("Cases", "10", LucideIcons.folderArchive),
+                      _buildStatCard("Rating", "0.0", LucideIcons.star),
+                    ],
+                  ),
+                  const SizedBox(height: 25),
+                  Text(
+                    'Reviews',
+                    style: GoogleFonts.lato(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  LawyerReviewsWidget(lawyerId: widget.lawyer.uid!),
+                  SizedBox(height: 50),
+
+                  // Options
+                  _buildOptionCard(
+                    LucideIcons.fileArchive,
+                    "Your cases",
+                    () {},
+                  ),
+                  _buildOptionCard(Icons.payment, "Payment", () {}),
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Get.off(() => LoginScreen());
+                      },
+                      icon: const Icon(Icons.logout, color: Colors.redAccent),
+                      label: Text(
+                        "Logout",
+                        style: GoogleFonts.poppins(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Colors.redAccent,
+                          width: 1.5,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        backgroundColor: Colors.redAccent.withOpacity(0.05),
+                        shadowColor: Colors.redAccent.withOpacity(0.2),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
           );
         },

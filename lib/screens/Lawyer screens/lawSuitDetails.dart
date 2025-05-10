@@ -1,10 +1,13 @@
+import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerMessages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class Lawsuit extends StatefulWidget {
-  const Lawsuit({super.key, required this.rid});
+  const Lawsuit({Key? key, required this.rid}) : super(key: key);
   final String rid;
 
   @override
@@ -12,98 +15,14 @@ class Lawsuit extends StatefulWidget {
 }
 
 class _LawsuitState extends State<Lawsuit> {
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String? requestId;
-  String? status; // Local status state
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> createPaymentForLawyer({
-    required String lawyerId,
-    required String clientId,
-    required String requestId,
-    required int fee,
-  }) async {
-    final paymentsRef = FirebaseFirestore.instance.collection('payments');
-
-    await paymentsRef.add({
-      'lawyerId': lawyerId,
-      'clientId': clientId,
-      'requestId': requestId,
-      'fee': fee,
-      'date': DateTime.now().toIso8601String(),
-      'status':
-          'completed', // You can change to 'pending' if you want manual approval
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    //  status = widget.status; // Initialize local status
-    fetchRequestId();
-  }
-
-  /// Fetch the Firestore document ID for this request
-  Future<void> fetchRequestId() async {
-    try {
-      print("Fetching requestId for rid: ${widget.rid}");
-
-      var querySnapshot =
-          await _firestore
-              .collection('requests')
-              .where('rid', isEqualTo: widget.rid)
-              .limit(1)
-              .get();
-
-      print("Query Result: ${querySnapshot.docs.length} documents found.");
-
-      if (querySnapshot.docs.isNotEmpty) {
-        requestId = querySnapshot.docs.first.id;
-        print("Fetched requestId: $requestId");
-
-        setState(() {}); // Update UI
-      } else {
-        print("No matching document found for rid: ${widget.rid}");
-      }
-    } catch (e) {
-      print("Error fetching request: $e");
-    }
-  }
-
-  /// Update request status in Firestore
-  Future<void> updateRequestStatus(String newStatus) async {
-    if (requestId == null) {
-      print("Error: requestId is null. Cannot update status.");
-      return;
-    }
-
-    try {
-      await _firestore.collection('requests').doc(requestId).update({
-        'status': newStatus,
-      });
-
-      if (mounted) {
-        setState(() {
-          status = newStatus;
-        });
-      }
-    } catch (e) {
-      print("Error updating Firestore: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to update status: $e")));
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> fetchRequests() async {
-    QuerySnapshot querySnapshot =
-        await _firestore
-            .collection('requests')
-            .where('rid', isEqualTo: widget.rid)
-            .get();
-
-    return querySnapshot.docs
-        .map((doc) => {...doc.data() as Map<String, dynamic>})
-        .toList();
+  Stream<QuerySnapshot> getRequestStream() {
+    return _firestore
+        .collection('requests')
+        .where('rid', isEqualTo: widget.rid)
+        .limit(1)
+        .snapshots();
   }
 
   String formatDate(String dateStr) {
@@ -124,117 +43,203 @@ class _LawsuitState extends State<Lawsuit> {
     }
   }
 
+  Future<void> updateRequestStatus(String requestId, String newStatus) async {
+    try {
+      await _firestore.collection('requests').doc(requestId).update({
+        'status': newStatus,
+      });
+    } catch (e) {
+      debugPrint('Error updating status: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update status.')),
+        );
+      }
+    }
+  }
+
+  Future<void> createPaymentForLawyer({
+    required String lawyerId,
+    required String clientId,
+    required String requestId,
+    required int fee,
+  }) async {
+    try {
+      await _firestore.collection('payments').add({
+        'lawyerId': lawyerId,
+        'clientId': clientId,
+        'requestId': requestId,
+        'fee': fee,
+        'date': DateTime.now().toIso8601String(),
+        'status': 'completed',
+      });
+    } catch (e) {
+      debugPrint('Error creating payment: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lawsuit Details')),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: fetchRequests(),
+      backgroundColor: const Color(0xFFF0F2F5),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
+        title: Text(
+          'Case Review',
+          style: GoogleFonts.openSans(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: getRequestStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center();
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(child: Text('No request found.'));
           }
 
-          final request = snapshot.data![0];
+          final doc = snapshot.data!.docs.first;
+          final requestId = doc.id;
+          final request = doc.data() as Map<String, dynamic>;
+          final status = request['status'];
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ListView(
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildInfoCard("Title", request['title']),
-                const SizedBox(height: 10),
-                Text(
-                  "Description",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
                 Container(
                   width: double.infinity,
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    request['desc'],
-                    style: const TextStyle(fontSize: 16),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _section('Client', request['username']),
+                      _section('Title', request['title']),
+                      _section('Description', request['desc']),
+                      _section('Fees', '\$${request['fees']}'),
+                      _section('Date', formatDate(request['date'])),
+                      _section('Time', request['time']),
+                      _section('Status:', status),
+                      _section(
+                        'Created At',
+                        formatTimestamp(request['timestamp']),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 10),
-                buildInfoCard("fees", '${request['fees']}'),
-                const SizedBox(height: 10),
-                buildInfoCard("Client Name", request['username']),
-                buildInfoCard("Date", formatDate(request['date'])),
-                buildInfoCard("Time", request['time']),
-                Text("Created At ${formatTimestamp(request['timestamp'])}"),
-                const SizedBox(height: 20),
+                ).animate().fade().slideY(begin: 0.1),
                 const SizedBox(height: 30),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          // Accept logic here
-                          updateRequestStatus('Accepted');
-                          await createPaymentForLawyer(
-                            lawyerId: request['lawyerId'],
-                            clientId: request['userId'],
-                            requestId: request['rid'],
-                            fee: request['fees'], // example fee
-                          );
-                          Get.back();
-                          Get.snackbar("case accepted", '');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 0, 116, 4),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                if (status == 'Accepted' || status == 'Rejected')
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () => Get.back(),
+
+                      label: const Text(
+                        'Back',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 0, 58, 112),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 24,
                         ),
-                        child: const Text(
-                          "Accept",
-                          style: TextStyle(
-                            color: Color.fromARGB(255, 255, 255, 255),
-                          ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          if (widget.rid != null) {
+                  )
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () async {
+                            await updateRequestStatus(requestId, 'Accepted');
+                            await createPaymentForLawyer(
+                              lawyerId: request['lawyerId'],
+                              clientId: request['userId'],
+                              requestId: request['rid'],
+                              fee: request['fees'],
+                            );
+                            if (mounted) {
+                              Get.snackbar(
+                                'Case Accepted',
+                                'Your client will be notified',
+                                backgroundColor: Colors.teal.shade50,
+                                colorText: Colors.teal.shade900,
+
+                                margin: const EdgeInsets.all(16),
+                                borderRadius: 12,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.check_circle_outline),
+                          label: const Text('Accept'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.teal.shade600,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
                             await _firestore
                                 .collection('requests')
-                                .doc(widget.rid)
+                                .doc(requestId)
                                 .delete();
-                          }
-                          updateRequestStatus('Rejected');
-                          Get.back();
-                          Get.snackbar('Case dismissed', '');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(
-                            255,
-                            255,
-                            17,
-                            0,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        child: const Text(
-                          "Reject",
-                          style: TextStyle(
-                            color: Color.fromARGB(255, 255, 255, 255),
+                            if (mounted) {
+                              Get.back();
+                              Get.snackbar(
+                                'Dismissed',
+                                'The case has been removed.',
+                                backgroundColor: Colors.red.shade50,
+                                colorText: Colors.red.shade900,
+                                snackPosition: SnackPosition.BOTTOM,
+                                margin: const EdgeInsets.all(16),
+                                borderRadius: 12,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.cancel_outlined),
+                          label: const Text('Reject'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.redAccent,
+                            side: const BorderSide(color: Colors.redAccent),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           );
@@ -243,23 +248,31 @@ class _LawsuitState extends State<Lawsuit> {
     );
   }
 
-  Widget buildInfoCard(String label, String value) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "$label: ",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+  Widget _section(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.openSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.blueGrey.shade600,
+              letterSpacing: 1,
             ),
-            Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GoogleFonts.openSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ],
       ),
     );
   }

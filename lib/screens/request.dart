@@ -107,7 +107,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       return query.docs.first;
     }
 
-    final String fees = request['fees'] ?? '20.0';
+    final int fees = request['fees'] ?? 20;
 
     Color statusColor =
         status == 'Accepted'
@@ -146,7 +146,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
+                        horizontal: 10,
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
@@ -161,23 +161,26 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       ),
                     ),
                     if (status == 'Rejected' || status == 'Cancelled')
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () async {
-                          final query =
+                      Padding(
+                        padding: const EdgeInsets.only(left: 100.0),
+                        child: IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () async {
+                            final query =
+                                await FirebaseFirestore.instance
+                                    .collection('requests')
+                                    .where('rid', isEqualTo: rid)
+                                    .limit(1)
+                                    .get();
+
+                            if (query.docs.isNotEmpty) {
                               await FirebaseFirestore.instance
                                   .collection('requests')
-                                  .where('rid', isEqualTo: rid)
-                                  .limit(1)
-                                  .get();
-
-                          if (query.docs.isNotEmpty) {
-                            await FirebaseFirestore.instance
-                                .collection('requests')
-                                .doc(query.docs.first.id)
-                                .delete();
-                          }
-                        },
+                                  .doc(query.docs.first.id)
+                                  .delete();
+                            }
+                          },
+                        ),
                       ),
 
                     if (status == 'Pending') ...[
@@ -221,7 +224,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                                           ),
                                           ElevatedButton(
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red,
+                                              backgroundColor: Colors.redAccent,
                                             ),
                                             child: const Text(
                                               "Yes, Cancel",
@@ -279,7 +282,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                                 }
                               },
                               child: const Text(
-                                "Cancel Request",
+                                "Cancel",
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),

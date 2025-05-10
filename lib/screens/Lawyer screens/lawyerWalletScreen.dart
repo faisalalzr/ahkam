@@ -2,21 +2,17 @@ import 'package:ahakam_v8/models/lawyer.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerHomeScreen.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerMessages.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerprofile.dart';
-import 'package:ahakam_v8/screens/Lawyer%20screens/morelawyer.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-
 import 'package:google_fonts/google_fonts.dart';
 
 class LawyerWalletScreen extends StatefulWidget {
   final Lawyer lawyer;
-
   const LawyerWalletScreen({super.key, required this.lawyer});
+
   @override
   _LawyerWalletScreenState createState() => _LawyerWalletScreenState();
 }
@@ -125,25 +121,39 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
 
   Widget _buildEarningsCard() {
     return Center(
-      child: Card(
-        elevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        color: const Color.fromARGB(255, 0, 33, 90),
-        child: Padding(
-          padding: EdgeInsets.only(top: 25, bottom: 25, right: 70, left: 70),
-          child: Column(
-            children: [
-              Text(
-                'Total Earnings',
-                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 18),
-              ),
-              SizedBox(height: 8),
-              Text(
-                '\$${totalEarnings.toStringAsFixed(2)}',
-                style: GoogleFonts.poppins(color: Colors.white, fontSize: 32),
-              ),
-            ],
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [Color(0xFF003366), Color(0xFF004C99)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.shade100,
+              blurRadius: 12,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        padding: EdgeInsets.symmetric(vertical: 30, horizontal: 60),
+        child: Column(
+          children: [
+            Text(
+              'Total Earnings',
+              style: GoogleFonts.poppins(color: Colors.white70, fontSize: 18),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '\$${totalEarnings.toStringAsFixed(2)}',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 34,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -164,37 +174,45 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
               'No transactions yet.',
               style: GoogleFonts.poppins(color: Colors.grey),
             ),
-          ),
-        ...payments.map((payment) {
-          DateTime date = DateTime.parse(payment['date']);
-          return Card(
-            margin: EdgeInsets.symmetric(vertical: 8),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              leading: Icon(Icons.attach_money, color: Colors.green),
-              title: Text(
-                'Consultation ',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+          )
+        else
+          ...payments.map((payment) {
+            DateTime date = DateTime.parse(payment['date']);
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 6),
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              subtitle: Text(
-                '${date.day}/${date.month}/${date.year}',
-                style: GoogleFonts.poppins(color: Colors.grey),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.green.withOpacity(0.1),
+                  child: Icon(Icons.attach_money, color: Colors.green),
+                ),
+                title: Text(
+                  'Online Consultation',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                ),
+                subtitle: Text(
+                  '${date.day}/${date.month}/${date.year}',
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey.shade600,
+                    fontSize: 13,
+                  ),
+                ),
+                trailing: Text(
+                  '\$${payment['fee']}',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                ),
               ),
-              trailing: Text(
-                '\$${payment['fee']}',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-              ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
       ],
     );
   }
 
   Widget _buildAnalyticsChart() {
+    final List<String> months = monthlyEarnings.keys.toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -205,6 +223,7 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
         SizedBox(height: 16),
         Container(
           height: 250,
+          padding: EdgeInsets.symmetric(horizontal: 8),
           child:
               monthlyEarnings.isEmpty
                   ? Center(
@@ -221,12 +240,16 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              List<String> months =
-                                  monthlyEarnings.keys.toList();
                               if (value.toInt() < months.length) {
-                                return Text(
+                                final monthNum = int.parse(
                                   months[value.toInt()].split('-')[1],
-                                  style: GoogleFonts.poppins(fontSize: 12),
+                                );
+                                final monthLabel = _getMonthAbbreviation(
+                                  monthNum,
+                                );
+                                return Text(
+                                  monthLabel,
+                                  style: GoogleFonts.poppins(fontSize: 11),
                                 );
                               }
                               return Text('');
@@ -234,7 +257,19 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
                           ),
                         ),
                         leftTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 32,
+                            getTitlesWidget: (value, meta) {
+                              if (value % 50 == 0) {
+                                return Text(
+                                  '\$${value.toInt()}',
+                                  style: GoogleFonts.poppins(fontSize: 10),
+                                );
+                              }
+                              return SizedBox.shrink();
+                            },
+                          ),
                         ),
                         topTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
@@ -243,7 +278,7 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
                           sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
-                      gridData: FlGridData(show: false),
+                      gridData: FlGridData(show: true, horizontalInterval: 50),
                       barGroups:
                           monthlyEarnings.entries.toList().asMap().entries.map((
                             entry,
@@ -255,9 +290,11 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
                               barRods: [
                                 BarChartRodData(
                                   toY: e.value,
-                                  color: Colors.blueAccent,
-                                  width: 20,
-                                  borderRadius: BorderRadius.circular(8),
+                                  gradient: LinearGradient(
+                                    colors: [Colors.blueAccent, Colors.blue],
+                                  ),
+                                  width: 16,
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                               ],
                             );
@@ -267,6 +304,24 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
         ),
       ],
     );
+  }
+
+  String _getMonthAbbreviation(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month - 1];
   }
 
   void onItemTapped(int index) {
@@ -288,7 +343,7 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
         break;
       case 2:
         Get.off(
-          Lawyermessages(lawyer: widget.lawyer),
+          () => Lawyermessages(lawyer: widget.lawyer),
           transition: Transition.noTransition,
         );
         break;

@@ -141,7 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       backgroundColor: Colors.white,
       appBar: AppBar(
-        automaticallyImplyLeading: true,
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         elevation: 0,
         title: Column(
@@ -157,24 +156,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(width: 5),
                 Column(
                   children: [
-                    Text(
-                      'Welcome,',
-                      style: GoogleFonts.lato(
-                        textStyle: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 0, 0, 0),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.4,
+                      child: Text(
+                        'Welcome, ${widget.account.name?.isNotEmpty == true ? widget.account.name : 'User'}',
+                        style: GoogleFonts.lato(
+                          fontSize: 14,
+                          color: Colors.black,
                         ),
-                      ),
-                    ),
-                    Text(
-                      ' ${widget.account.name ?? 'user'}',
-                      style: GoogleFonts.lato(
-                        textStyle: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 0, 0, 0),
-                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                   ],
@@ -184,12 +175,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.info_outline),
-            onPressed: () {
-              Get.to(DisclaimerPage(), transition: Transition.rightToLeft);
-            },
-          ),
           Stack(
             children: [
               Icon(Icons.notifications_none, size: 28),
@@ -212,75 +197,10 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SingleChildScrollView(
           physics: AlwaysScrollableScrollPhysics(),
 
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(13),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Get.to(
-                        () => BrowseScreen('', account: widget.account),
-                        transition: Transition.downToUp,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutQuart,
-                      );
-                    },
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 65,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color.fromARGB(128, 255, 224, 147),
-                              Color.fromARGB(121, 255, 214, 110),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            stops: [0.0, 0.8],
-                          ),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_rounded,
-                              color: const Color.fromARGB(255, 0, 0, 0),
-                              size: 22,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              "Browse Lawyers",
-                              style: GoogleFonts.lato(
-                                fontSize: 18,
-                                color: const Color.fromARGB(255, 0, 0, 0),
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
               SizedBox(height: 17),
               Text(
                 "Categories",
@@ -330,7 +250,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: CircularProgressIndicator(),
                     ); // Loading spinner
                   } else if (snapshot.hasError) {
-                    return Center(child: Text("Error loading lawyers"));
+                    print('Error: ${snapshot.error}');
+                    return Center(
+                      child: Text("Error loading lawyers: ${snapshot.error}"),
+                    );
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Center(
                       child: Text("No top-rated lawyers available"),

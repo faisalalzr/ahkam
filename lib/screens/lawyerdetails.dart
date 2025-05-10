@@ -53,7 +53,29 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFFD4AF37), // gold for selected day and header
+              onPrimary: Colors.white, // text on gold background
+              surface: Colors.white, // background of the picker
+              onSurface: Colors.black, // default text color
+              secondary: Color(0xFFF5F5DC), // beige for accents if needed
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Color(0xFFD4AF37), // gold for OK/Cancel
+              ),
+            ),
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
@@ -66,6 +88,42 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFFD4AF37), // gold
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: Colors.white,
+              hourMinuteTextColor: Colors.black,
+              hourMinuteColor: Color(0xFFF5F5DC), // beige background
+              dayPeriodColor: Color(0xFFF5F5DC), // AM/PM toggle bg
+              dayPeriodTextColor: MaterialStateColor.resolveWith(
+                (states) =>
+                    states.contains(MaterialState.selected)
+                        ? Colors.white
+                        : Colors.black,
+              ),
+              entryModeIconColor: Color(0xFFD4AF37), // gold
+              dialHandColor: Color(0xFFD4AF37),
+              dialBackgroundColor: Color(0xFFF5F5DC),
+              dialTextColor: MaterialStateColor.resolveWith(
+                (states) =>
+                    states.contains(MaterialState.selected)
+                        ? Colors.white
+                        : Colors.black,
+              ),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: Color(0xFFD4AF37)),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -115,7 +173,10 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
     try {
       await fyre.collection('requests').add(request);
       Get.back();
-      Get.snackbar('Success', 'Consultation request sent!');
+      Get.snackbar(
+        'Consultation request sent',
+        '${widget.lawyer!.name} will be notified',
+      );
     } catch (e) {
       Get.snackbar('Error', 'Failed to send request: $e');
     }
@@ -124,75 +185,112 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
   void _showRequestDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder:
-          (_) => AlertDialog(
+          (_) => Dialog(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 20,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            title: Center(
-              child: Text(
-                'Book Consultation',
-                style: GoogleFonts.lato(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-            ),
-            content: SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
+            child: Container(
+              width: double.infinity, // Full width
+              height:
+                  MediaQuery.of(context).size.height *
+                  0.92, // Almost full height
+              padding: const EdgeInsets.all(20),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildTextField('Title', _titleCont, icon: Icons.edit),
-                  SizedBox(height: 16),
-                  _buildTextField(
-                    'Description',
-                    _descriptionCont,
-                    icon: Icons.description,
-                    maxLines: 3,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(
+                        width: 24,
+                      ), // Placeholder to balance close button
+                      Text(
+                        'Book Consultation',
+                        style: GoogleFonts.lato(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 16),
-                  _buildTextField(
-                    'Select Date',
-                    _dateController,
-                    icon: Icons.calendar_today,
-                    onTap: () => _selectDate(context),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        children: [
+                          _buildTextField(
+                            'Title',
+                            _titleCont,
+                            icon: Icons.edit,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            'Description',
+                            _descriptionCont,
+                            icon: Icons.description,
+                            maxLines: 6,
+                          ),
+
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            'Select Date',
+                            _dateController,
+                            icon: Icons.calendar_today,
+                            onTap: () => _selectDate(context),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            'Select Time',
+                            _timeController,
+                            icon: Icons.access_time,
+                            onTap: () => _selectTime(context),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  SizedBox(height: 16),
-                  _buildTextField(
-                    'Select Time',
-                    _timeController,
-                    icon: Icons.access_time,
-                    onTap: () => _selectTime(context),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: _sendRequest,
+                        child: const Text('Submit'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            actionsPadding: const EdgeInsets.only(
-              bottom: 12,
-              right: 16,
-              left: 16,
-            ),
-            actionsAlignment: MainAxisAlignment.spaceBetween,
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancel'),
-                style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-              ),
-              ElevatedButton(
-                onPressed: _sendRequest,
-                child: Text('Submit'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
           ),
     );
   }
@@ -270,7 +368,7 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
           if (!snapshot.hasData || snapshot.data == null) return Center();
 
           final data = snapshot.data!.data()!;
-          final String fees = data['fees']?.toString() ?? '0';
+          final int fees = data['fees'] ?? 20;
           final String exp = data['exp']?.toString() ?? '0';
           final String prov = data['province']?.toString() ?? 'Unknown';
 
@@ -317,15 +415,16 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    SizedBox(height: 8),
                                     Text(
                                       data['name'],
                                       style: GoogleFonts.lato(
-                                        fontSize: 24,
+                                        fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black87,
                                       ),
                                     ),
-                                    SizedBox(height: 8),
+
                                     Text(
                                       data['specialization'] ?? 'Unknown',
                                       style: GoogleFonts.lato(
@@ -353,24 +452,32 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
                           SizedBox(height: 16),
                           Text(
                             data['desc'] ?? 'No description available.',
-                            style: GoogleFonts.lato(fontSize: 14, height: 1.5),
+                            style: GoogleFonts.lato(fontSize: 13, height: 1.5),
                           ),
                           SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: _showRequestDialog,
-                            icon: Icon(Icons.calendar_today),
-                            label: Text('Request Consultation'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 30,
-                                vertical: 14,
+                          Center(
+                            child: ElevatedButton.icon(
+                              onPressed: _showRequestDialog,
+                              icon: Icon(Icons.calendar_today),
+                              label: Text('Book Consultation'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(
+                                  255,
+                                  255,
+                                  255,
+                                  255,
+                                ),
+
+                                foregroundColor: Colors.black,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 30,
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                textStyle: GoogleFonts.lato(fontSize: 16),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              textStyle: GoogleFonts.lato(fontSize: 16),
                             ),
                           ),
                         ],

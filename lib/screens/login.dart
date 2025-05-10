@@ -64,6 +64,11 @@ class _LoginScreenState extends State<LoginScreen> {
               email: anyUser.email!,
               name: userDoc['name'],
               imageUrl: userDoc['imageUrl'],
+              uid: userDoc['uid'],
+              desc: userDoc['desc'],
+              number: userDoc['number'],
+              province: userDoc['province'],
+              fees: userDoc['fees'],
             ),
           ),
         );
@@ -74,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
               email: anyUser.email!,
               name: userDoc['name'],
               imageUrl: userDoc['imageUrl'],
+              uid: userDoc['uid'],
             ),
           ),
         );
