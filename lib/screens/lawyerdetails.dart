@@ -9,12 +9,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart'; // NEW
 
 class LawyerDetailsScreen extends StatefulWidget {
-  final Lawyer lawyer;
   final Account account;
+  final String lawyerId;
   const LawyerDetailsScreen({
     super.key,
-    required this.lawyer,
+
     required this.account,
+    required this.lawyerId,
   });
 
   @override
@@ -35,7 +36,7 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       var query =
           await fyre
               .collection('account')
-              .where('email', isEqualTo: widget.lawyer!.email)
+              .where('uid', isEqualTo: widget.lawyerId)
               .limit(1)
               .get();
       if (query.docs.isNotEmpty) {
@@ -153,11 +154,20 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
     final userDoc = await fyre.collection('account').doc(currentUser.uid).get();
     final username = userDoc.data()?['name'] ?? 'Unknown';
 
+    final lawyerDoc =
+        await fyre.collection('account').doc(widget.lawyerId).get();
+
+    final lawyerData = lawyerDoc.data();
+    final lawyerName = lawyerData?['name'] ?? 'Unknown';
+
+    final lawyerFees = lawyerData?['fees'] ?? 0;
+
     final request = {
-      'rid': '${currentUser.uid}${widget.lawyer!.uid}',
+      'rid':
+          '${currentUser.uid}${widget.lawyerId}${FieldValue.serverTimestamp()}',
       'userId': currentUser.uid,
-      'lawyerId': widget.lawyer!.uid,
-      'lawyerName': widget.lawyer!.name,
+      'lawyerId': widget.lawyerId,
+      'lawyerName': lawyerName,
       'username': username,
       'title': _titleCont.text,
       'desc': _descriptionCont.text,
@@ -167,7 +177,7 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       'timestamp': FieldValue.serverTimestamp(),
       'started?': false,
       'ended?': false,
-      'fees': widget.lawyer!.fees!,
+      'fees': lawyerFees,
     };
 
     try {
@@ -175,7 +185,7 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       Get.back();
       Get.snackbar(
         'Consultation request sent',
-        '${widget.lawyer!.name} will be notified',
+        '${lawyerName} will be notified',
       );
     } catch (e) {
       Get.snackbar('Error', 'Failed to send request: $e');

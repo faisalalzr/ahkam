@@ -78,8 +78,9 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text('Profile', style: GoogleFonts.poppins(color: Colors.black)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -138,7 +139,7 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
               setState(() {}); // Re-fetch the data
               await Future.delayed(Duration(milliseconds: 300));
             },
-            color: const Color.fromARGB(255, 0, 52, 142),
+            color: const Color.fromARGB(151, 0, 35, 96),
             backgroundColor: Colors.white,
             height: 140,
             animSpeedFactor: 2,

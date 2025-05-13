@@ -80,14 +80,19 @@ class _BrowseScreenState extends State<BrowseScreen> {
     }
 
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Text(
           widget.category ?? "Browse Lawyers",
-          style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 72, 47, 0)),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Color.fromARGB(255, 72, 47, 0),
+          ),
         ),
         centerTitle: true,
-        elevation: 1,
+        elevation: 0.5,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -102,8 +107,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.white,
             child: TextField(
               controller: searchController,
               onChanged: (query) {
@@ -115,10 +121,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
                 hintText: "Search for a lawyer...",
                 prefixIcon: Icon(
                   Icons.search,
-                  color: Color.fromARGB(255, 104, 35, 35),
+                  color: Color.fromARGB(255, 0, 0, 0),
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Color.fromARGB(255, 255, 247, 247),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide.none,
@@ -141,11 +147,18 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
-                final lawyers = snapshot.data!.docs;
+                final lawyers =
+                    snapshot.data!.docs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return data['name'].toString().toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      );
+                    }).toList();
+
                 if (lawyers.isEmpty) {
                   return Center(
                     child: Text(
-                      '',
+                      'No lawyers found.',
                       style: TextStyle(fontSize: 16, color: Colors.black54),
                     ),
                   );
@@ -169,19 +182,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       desc: lawyerData['desc'] ?? '',
                     );
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Card(
-                        elevation: 4,
-                        shadowColor: Colors.black.withOpacity(0.1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: LawyerCardBrowse(
-                          lawyer: lawyer,
-                          account: widget.account,
-                        ),
-                      ),
+                    return LawyerCardBrowse(
+                      lawyer: lawyer,
+                      account: widget.account,
                     );
                   },
                 );
@@ -193,7 +196,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
       bottomNavigationBar: BottomNavigationBar(
         showSelectedLabels: false,
         showUnselectedLabels: false,
-        elevation: 300,
+        elevation: 20,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,

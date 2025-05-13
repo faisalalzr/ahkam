@@ -98,10 +98,6 @@ class _EditLawyerProfileScreenState extends State<EditLawyerProfileScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
-      );
-
       Navigator.pop(context);
     } catch (e) {
       print("Error updating profile: $e");
@@ -144,6 +140,7 @@ class _EditLawyerProfileScreenState extends State<EditLawyerProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: true,
         title: Text("Edit Profile", style: GoogleFonts.poppins()),
         centerTitle: true,
         elevation: 0,

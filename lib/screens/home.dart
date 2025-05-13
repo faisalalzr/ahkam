@@ -1,12 +1,12 @@
 import 'package:ahakam_v8/models/account.dart';
 import 'package:ahakam_v8/models/lawyer.dart';
+import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerInbox.dart';
 import 'package:ahakam_v8/screens/about.dart';
 import 'package:ahakam_v8/screens/browse.dart';
 import 'package:ahakam_v8/screens/messagesScreen.dart';
 import 'package:ahakam_v8/screens/profile.dart';
 import 'package:ahakam_v8/screens/request.dart';
 import 'package:ahakam_v8/widgets/lawyer_card.dart';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
@@ -18,6 +18,7 @@ import 'disclaimerPage.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.account});
   final Account account;
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -32,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 0:
         Get.to(
-          BrowseScreen('', account: widget.account),
+          BrowseScreen(account: widget.account, ''),
           transition: Transition.noTransition,
         );
         break;
@@ -48,9 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
           transition: Transition.noTransition,
         );
         break;
-
-      default:
-        return;
     }
   }
 
@@ -58,170 +56,121 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            DrawerHeader(
-              child: Column(
-                children: [
-                  Image.asset(
-                    height: 50,
-                    width: 100,
+        child: SafeArea(
+          child: Column(
+            children: [
+              DrawerHeader(
+                child: Center(
+                  child: Image.asset(
                     "assets/images/ehkaam-seeklogo.png",
+                    height: 50,
                     fit: BoxFit.contain,
                   ),
-                ],
+                ),
               ),
-            ),
-            ListTile(
-              leading: Icon(
+              _buildDrawerItem(
                 Icons.info_outline,
-                color: Color.fromARGB(255, 0, 0, 0),
-              ),
-              title: Text(
                 "Disclaimer",
-                style: GoogleFonts.lato(
-                  textStyle: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                  ),
-                ),
+                () => Get.to(() => DisclaimerPage()),
               ),
-              onTap: () => Get.to(DisclaimerPage()),
-            ),
-            ListTile(
-              leading: Icon(Icons.info, color: Color.fromARGB(255, 0, 0, 0)),
-              title: Text(
+              _buildDrawerItem(
+                Icons.info,
                 "About",
-                style: GoogleFonts.lato(
-                  textStyle: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                  ),
-                ),
+                () => Get.to(() => AboutPage()),
               ),
-              onTap: () => Get.to(AboutPage()),
-            ),
-            ListTile(
-              leading: Icon(Icons.person, color: Color.fromARGB(255, 0, 0, 0)),
-              title: Text(
-                "Profile",
-                style: GoogleFonts.lato(
-                  textStyle: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                  ),
-                ),
-              ),
-              onTap:
-                  () => Get.to(
-                    ProfileScreen(account: widget.account),
-                    transition: Transition.noTransition,
-                  ),
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.settings,
-                color: Color.fromARGB(255, 0, 0, 0),
-              ),
-              title: Text(
-                "Settings",
-                style: GoogleFonts.lato(
-                  textStyle: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                  ),
-                ),
-              ),
-              onTap: () {},
-            ),
-          ],
+              _buildDrawerItem(Icons.person, "Profile", () {
+                Get.to(
+                  () => ProfileScreen(account: widget.account),
+                  transition: Transition.noTransition,
+                );
+              }),
+              _buildDrawerItem(Icons.settings, "Settings", () {}),
+            ],
+          ),
         ),
       ),
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 255, 255, 255),
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
+        backgroundColor: Colors.white,
+        elevation: 2,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black12,
+        centerTitle: false,
+        titleSpacing: 16,
+        title: Row(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(widget.account!.imageUrl!),
-                ),
-                SizedBox(width: 5),
-                Column(
-                  children: [
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.4,
-                      child: Text(
-                        'Welcome, ${widget.account.name?.isNotEmpty == true ? widget.account.name : 'User'}',
-                        style: GoogleFonts.lato(
-                          fontSize: 14,
-                          color: Colors.black,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
+            CircleAvatar(
+              backgroundImage: NetworkImage(widget.account.imageUrl ?? ''),
+              radius: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Welcome',
+                    style: GoogleFonts.lato(
+                      fontSize: 13,
+                      color: Colors.grey[700],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  Text(
+                    widget.account.name?.isNotEmpty == true
+                        ? widget.account.name!
+                        : 'User',
+                    style: GoogleFonts.lato(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
-          Stack(
-            children: [
-              Icon(Icons.notifications_none, size: 28),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: CircleAvatar(radius: 7, backgroundColor: Colors.red),
-              ),
-            ],
+          IconButton(
+            onPressed: () {
+              Get.to(InboxScreen(), transition: Transition.rightToLeftWithFade);
+            },
+            icon: const Icon(
+              Icons.notifications_none_rounded,
+              color: Colors.black87,
+              size: 26,
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
+
       body: LiquidPullToRefresh(
         onRefresh: _handleRefresh,
-        showChildOpacityTransition: false,
-        color: Color.fromARGB(255, 224, 191, 109),
+        color: const Color.fromARGB(255, 224, 191, 109),
         backgroundColor: Colors.white,
         animSpeedFactor: 2.0,
         height: 90,
         child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-
-          padding: EdgeInsets.all(13),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 17),
-              Text(
-                "Categories",
-                style: GoogleFonts.lato(
-                  textStyle: TextStyle(
-                    fontSize: 20,
-                    color: Color.fromARGB(255, 72, 47, 0),
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
+              _sectionTitle("Categories"),
+              const SizedBox(height: 8),
               SizedBox(
                 height: 175,
                 child: GridView.builder(
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1.3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.2,
                   ),
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
@@ -232,43 +181,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
               ),
-              Text(
-                "Top Lawyers",
-                style: GoogleFonts.lato(
-                  textStyle: TextStyle(
-                    fontSize: 20,
-                    color: Color.fromARGB(255, 72, 47, 0),
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
+              const SizedBox(height: 20),
+              _sectionTitle("Top Lawyers"),
+              const SizedBox(height: 10),
               FutureBuilder<List<Lawyer>>(
                 future: Lawyer.getTopLawyers(limit: 2),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    ); // Loading spinner
+                    return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
-                    print('Error: ${snapshot.error}');
                     return Center(
                       child: Text("Error loading lawyers: ${snapshot.error}"),
                     );
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(
+                    return const Center(
                       child: Text("No top-rated lawyers available"),
                     );
                   }
 
-                  List<Lawyer> topLawyers = snapshot.data!;
                   return Column(
                     children:
-                        topLawyers.map((lawyer) {
-                          return LawyerCard(
-                            lawyer: lawyer,
-                            account: widget.account,
-                          );
-                        }).toList(),
+                        snapshot.data!
+                            .map(
+                              (lawyer) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6.0,
+                                ),
+                                child: LawyerCard(
+                                  lawyer: lawyer,
+                                  account: widget.account,
+                                ),
+                              ),
+                            )
+                            .toList(),
                   );
                 },
               ),
@@ -279,13 +224,13 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         showSelectedLabels: false,
         showUnselectedLabels: false,
-        elevation: 300,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color.fromARGB(255, 72, 47, 0),
+        selectedItemColor: const Color.fromARGB(255, 72, 47, 0),
         unselectedItemColor: Colors.grey,
-        items: [
+        elevation: 10,
+        items: const [
           BottomNavigationBarItem(icon: Icon(LucideIcons.search), label: ""),
           BottomNavigationBarItem(
             icon: Icon(LucideIcons.messageCircle),
@@ -301,9 +246,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.black),
+      title: Text(
+        title,
+        style: GoogleFonts.lato(fontSize: 17, color: Colors.black),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  Widget _sectionTitle(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.lato(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: const Color.fromARGB(255, 72, 47, 0),
+      ),
+    );
+  }
+
   Future<void> _handleRefresh() async {
-    // Simulate network call
-    await Future.delayed(Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 300));
     setState(() {});
   }
 }

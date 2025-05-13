@@ -20,7 +20,7 @@ class LawyerCardBrowse extends StatelessWidget {
     var query =
         await fyre
             .collection('account')
-            .where('email', isEqualTo: lawyer!.email)
+            .where('uid', isEqualTo: lawyer!.uid)
             .limit(1)
             .get();
     return query.docs.first;
@@ -105,7 +105,10 @@ class LawyerCardBrowse extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   Get.to(
-                    () => LawyerDetailsScreen(lawyer: lawyer, account: account),
+                    () => LawyerDetailsScreen(
+                      lawyerId: lawyer.uid!,
+                      account: account,
+                    ),
                     transition: Transition.fade,
                   );
                 },

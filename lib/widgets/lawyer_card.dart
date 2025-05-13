@@ -83,7 +83,7 @@ class LawyerCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      lawyerdata['specialization'] ?? 'Legal Expert',
+                      ' ${lawyerdata['specialization']}  law',
                       style: GoogleFonts.lato(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -97,7 +97,10 @@ class LawyerCard extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   Get.to(
-                    () => LawyerDetailsScreen(lawyer: lawyer, account: account),
+                    () => LawyerDetailsScreen(
+                      lawyerId: lawyer.uid!,
+                      account: account,
+                    ),
                     transition: Transition.fade,
                   );
                 },

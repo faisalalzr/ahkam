@@ -34,7 +34,7 @@ class CategoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Get.to(
-          BrowseScreen('', account: account, category: category.name),
+          BrowseScreen('', account: account),
           transition: Transition.downToUp,
         );
       },

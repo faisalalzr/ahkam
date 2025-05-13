@@ -96,4 +96,6 @@ class Lawyer extends Account {
 
     return querySnapshot.docs.map((doc) => Lawyer.fromFirestore(doc)).toList();
   }
+
+  static fromMap(Map<String, dynamic> data) {}
 }

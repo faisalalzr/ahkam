@@ -26,17 +26,18 @@ class _NewState extends State<New> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _licenseController = TextEditingController();
-  final TextEditingController _experienceController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
-  final TextEditingController _feesController = TextEditingController();
+
+  int _experience = 0;
+  int _fees = 0;
 
   final List<String> professions = [
-    "Civil Law",
-    "Criminal Law",
-    "Commercial Law",
-    "Labor Law",
-    "Insurance Law",
-    "International Law",
+    "Civil",
+    "Criminal",
+    "Commercial",
+    "Labor",
+    "Insurance",
+    "International",
   ];
   String? _selectedProfession;
 
@@ -53,74 +54,67 @@ class _NewState extends State<New> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      appBar: AppBar(
+        title: const Text(
+          'Complete Sign-Up',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color.fromARGB(255, 68, 40, 18),
+          ),
+        ),
+        automaticallyImplyLeading: true,
+        backgroundColor: Color(0xFFF6F1E9),
+      ),
+      backgroundColor: Color(0xFFF6F1E9),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         child: Form(
           key: _formKey,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 12,
-                  offset: Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  'Complete Sign-Up',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 0, 0, 0),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _buildUserTypeToggle(),
-                const SizedBox(height: 20),
-                _buildProfileImagePicker(),
-                const SizedBox(height: 20),
-                _buildTextField("Full Name", _nameController),
+          child: Column(
+            children: [
+              const SizedBox(height: 25),
+
+              const SizedBox(height: 15),
+              _buildUserTypeToggle(),
+
+              const SizedBox(height: 15),
+              Divider(),
+              const SizedBox(height: 15),
+              _buildProfileImagePicker(),
+              const SizedBox(height: 20),
+              _buildBorderlessTextField("Full Name", _nameController),
+              const SizedBox(height: 15),
+              _buildBorderlessTextField(
+                "Phone Number",
+                _phoneController,
+                keyboardType: TextInputType.phone,
+              ),
+              if (isLawyer) ...[
                 const SizedBox(height: 15),
-                _buildTextField(
-                  "Phone Number",
-                  _phoneController,
-                  keyboardType: TextInputType.phone,
+                _buildDropdownField("Profession"),
+                const SizedBox(height: 15),
+                _buildDropdownFieldprov("Province"),
+                const SizedBox(height: 15),
+                _buildCounter(
+                  "Years of Experience",
+                  _experience,
+                  (val) => setState(() => _experience = val),
                 ),
-                if (isLawyer) ...[
-                  const SizedBox(height: 15),
-                  _buildDropdownField("Profession", _selectedProfession),
-                  const SizedBox(height: 15),
-                  _buildDropdownFieldprov("Province", _selectedprovinces),
-                  const SizedBox(height: 15),
-                  _buildTextField(
-                    "Years of Experience",
-                    _experienceController,
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 15),
-                  _buildTextField("License Number", _licenseController),
-                  const SizedBox(height: 15),
-                  _buildTextField("Description", _descController),
-                  const SizedBox(height: 15),
-                  _buildTextField(
-                    "Consultation Fee",
-                    _feesController,
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
-                const SizedBox(height: 25),
-                isSubmitting
-                    ? CircularProgressIndicator()
-                    : _buildSubmitButton(),
+                const SizedBox(height: 15),
+                _buildBorderlessTextField("License Number", _licenseController),
+                const SizedBox(height: 15),
+                _buildBorderlessTextField("Description", _descController),
+                const SizedBox(height: 15),
+                _buildCounter(
+                  "Consultation Fee",
+                  _fees,
+                  (val) => setState(() => _fees = val),
+                ),
               ],
-            ),
+              const SizedBox(height: 25),
+              isSubmitting ? CircularProgressIndicator() : _buildSubmitButton(),
+            ],
           ),
         ),
       ),
@@ -148,23 +142,19 @@ class _NewState extends State<New> {
         height: 120,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color:
-              selected ? const Color.fromARGB(255, 112, 67, 0) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: selected ? Color.fromARGB(255, 44, 26, 13) : Colors.white,
+          borderRadius: BorderRadius.circular(25),
           boxShadow: [
             if (selected)
               BoxShadow(
-                color: const Color.fromARGB(255, 112, 84, 0).withOpacity(0.5),
+                color: Colors.brown.withOpacity(0.4),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
           ],
           border: Border.all(
-            color:
-                selected
-                    ? const Color.fromARGB(255, 100, 65, 0)
-                    : Colors.grey.shade300,
-            width: 2,
+            color: selected ? Color(0xFF8B5E3C) : Colors.grey.shade300,
+            width: 0,
           ),
         ),
         child: Column(
@@ -195,22 +185,18 @@ class _NewState extends State<New> {
       onTap: pickImage,
       child: CircleAvatar(
         radius: 50,
-        backgroundColor: const Color.fromARGB(255, 116, 70, 0).withOpacity(0.2),
+        backgroundColor: Colors.brown.withOpacity(0.2),
         backgroundImage:
             _selectedImage != null ? FileImage(_selectedImage!) : null,
         child:
             _selectedImage == null
-                ? Icon(
-                  Icons.camera_alt,
-                  color: const Color.fromARGB(255, 130, 69, 0),
-                  size: 30,
-                )
+                ? Icon(Icons.camera_alt, color: Colors.brown, size: 30)
                 : null,
       ),
     );
   }
 
-  Widget _buildTextField(
+  Widget _buildBorderlessTextField(
     String label,
     TextEditingController controller, {
     TextInputType? keyboardType,
@@ -221,60 +207,112 @@ class _NewState extends State<New> {
       validator:
           (val) => val == null || val.isEmpty ? 'Please enter $label' : null,
       decoration: InputDecoration(
-        labelText: label,
+        hintText: label,
         filled: true,
-        fillColor: Colors.grey[100],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-        focusedBorder: OutlineInputBorder(
+        fillColor: Color(0xFFFFFBF5),
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(
-            color: const Color.fromARGB(255, 112, 73, 0),
-            width: 2,
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField(String label) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFFFFFBF5),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 12),
+      child: DropdownButtonFormField<String>(
+        value: _selectedProfession,
+        onChanged: (val) => setState(() => _selectedProfession = val),
+        items:
+            professions.map((e) {
+              return DropdownMenuItem(
+                value: e,
+                child: Text(
+                  '$e Law',
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+              );
+            }).toList(),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.brown),
+          border: InputBorder.none,
+        ),
+        icon: Icon(Icons.arrow_drop_down, color: Colors.brown),
+        dropdownColor: Color(0xFFFFFBF5),
+        style: TextStyle(color: Colors.black87, fontSize: 16), // <- important
+        borderRadius: BorderRadius.circular(15),
+      ),
+    );
+  }
+
+  Widget _buildDropdownFieldprov(String label) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFFFFFBF5),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 12),
+      child: DropdownButtonFormField<String>(
+        value: _selectedprovinces,
+        onChanged: (val) => setState(() => _selectedprovinces = val),
+        items:
+            provinces.map((e) {
+              return DropdownMenuItem(
+                value: e,
+                child: Text(
+                  e,
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+              );
+            }).toList(),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.brown),
+          border: InputBorder.none,
+        ),
+        icon: Icon(Icons.arrow_drop_down, color: Colors.brown),
+        dropdownColor: Color(0xFFFFFBF5),
+        style: TextStyle(color: Colors.black87, fontSize: 16),
+        borderRadius: BorderRadius.circular(15),
+      ),
+    );
+  }
+
+  Widget _buildCounter(String label, int value, Function(int) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 5),
+        Container(
+          decoration: BoxDecoration(
+            color: Color(0xFFFFFBF5),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                onPressed: () => onChanged(value > 0 ? value - 1 : 0),
+                icon: Icon(Icons.remove),
+              ),
+              Text(value.toString(), style: TextStyle(fontSize: 16)),
+              IconButton(
+                onPressed: () => onChanged(value + 1),
+                icon: Icon(Icons.add),
+              ),
+            ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDropdownField(String label, String? value) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      onChanged: (val) => setState(() => _selectedProfession = val),
-      items:
-          professions
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: Colors.grey[100],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.deepPurpleAccent, width: 2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdownFieldprov(String label, String? value) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      onChanged: (val) => setState(() => _selectedprovinces = val),
-      items:
-          provinces
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: Colors.grey[100],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.deepPurpleAccent, width: 2),
-        ),
-      ),
+      ],
     );
   }
 
@@ -283,7 +321,7 @@ class _NewState extends State<New> {
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: const Color.fromARGB(255, 121, 83, 0),
+        backgroundColor: Color.fromARGB(255, 61, 33, 12),
       ),
       onPressed: _submitForm,
       child: const Text(
@@ -294,9 +332,11 @@ class _NewState extends State<New> {
   }
 
   Future<void> pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => _selectedImage = File(image.path));
+    final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path); // Convert XFile to File
+      });
     }
   }
 
@@ -324,7 +364,7 @@ class _NewState extends State<New> {
           email: widget.email,
           number: _phoneController.text,
           isLawyer: false,
-          imageUrl: imageUrl, // add this
+          imageUrl: imageUrl,
         );
         await user.addToFirestore();
         Get.to(HomeScreen(account: user));
@@ -335,12 +375,12 @@ class _NewState extends State<New> {
           email: widget.email,
           number: _phoneController.text,
           licenseNO: _licenseController.text,
-          exp: int.parse(_experienceController.text),
+          exp: _experience,
           specialization: _selectedProfession,
           province: _selectedprovinces,
           isLawyer: true,
           desc: _descController.text,
-          fees: _feesController.text as int,
+          fees: _fees,
           imageUrl: imageUrl,
         );
         await lawyer.addToFirestore();
@@ -356,7 +396,7 @@ class _NewState extends State<New> {
   Future<String> uploadImageToSupabase(File imageFile, String uid) async {
     final supabase = Supabase.instance.client;
     final bytes = await imageFile.readAsBytes();
-    final fileName = '$uid.jpg'; // Save using UID
+    final fileName = '$uid.jpg';
     final path = 'profile_pics/$fileName';
 
     final response = await supabase.storage
@@ -367,12 +407,9 @@ class _NewState extends State<New> {
           fileOptions: const FileOptions(upsert: true),
         );
 
-    print("Upload response: $response");
-
     if (response.isEmpty) throw Exception("Upload failed");
 
-    final publicUrl = supabase.storage.from('imagges').getPublicUrl(path);
-    return publicUrl;
+    return supabase.storage.from('imagges').getPublicUrl(path);
   }
 
   void _showError(String message) {
