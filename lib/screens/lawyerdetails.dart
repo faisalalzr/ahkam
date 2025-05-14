@@ -183,10 +183,10 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
     try {
       await fyre.collection('requests').add(request);
       Get.back();
-      Get.snackbar(
-        'Consultation request sent',
-        '${lawyerName} will be notified',
-      );
+      // Get.snackbar(
+      //   'Consultation request sent',
+      //   '${lawyerName} will be notified',
+      // );
     } catch (e) {
       Get.snackbar('Error', 'Failed to send request: $e');
     }

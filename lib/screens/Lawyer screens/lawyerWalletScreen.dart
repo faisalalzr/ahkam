@@ -75,6 +75,7 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
         automaticallyImplyLeading: false,
         centerTitle: true,
         elevation: 0,
+        toolbarHeight: 50,
       ),
       body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(

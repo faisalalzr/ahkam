@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ahakam_v8/models/lawyer.dart';
 import 'package:get/get.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../widgets/LawyerCardBrowse.dart';
 
@@ -92,7 +93,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
           ),
         ),
         centerTitle: true,
-        elevation: 0.5,
+        elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -105,93 +106,101 @@ class _BrowseScreenState extends State<BrowseScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.white,
-            child: TextField(
-              controller: searchController,
-              onChanged: (query) {
-                setState(() {
-                  _searchQuery = query;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: "Search for a lawyer...",
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: Color.fromARGB(255, 0, 0, 0),
-                ),
-                filled: true,
-                fillColor: Color.fromARGB(255, 255, 247, 247),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: 15,
-                  horizontal: 20,
+      body: LiquidPullToRefresh(
+        onRefresh: _handleRefresh,
+        color: const Color.fromARGB(255, 224, 191, 109),
+        backgroundColor: Colors.white,
+        animSpeedFactor: 2.0,
+        height: 90,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.white,
+              child: TextField(
+                controller: searchController,
+                onChanged: (query) {
+                  setState(() {
+                    _searchQuery = query;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: "Search for a lawyer...",
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                  ),
+                  filled: true,
+                  fillColor: Color.fromARGB(255, 255, 247, 247),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 15,
+                    horizontal: 20,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: query.snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: query.snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
 
-                final lawyers =
-                    snapshot.data!.docs.where((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      return data['name'].toString().toLowerCase().contains(
-                        _searchQuery.toLowerCase(),
+                  final lawyers =
+                      snapshot.data!.docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        return data['name'].toString().toLowerCase().contains(
+                          _searchQuery.toLowerCase(),
+                        );
+                      }).toList();
+
+                  if (lawyers.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No lawyers found.',
+                        style: TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: EdgeInsets.all(16),
+                    itemCount: lawyers.length,
+                    itemBuilder: (context, index) {
+                      final lawyerData =
+                          lawyers[index].data() as Map<String, dynamic>;
+
+                      Lawyer lawyer = Lawyer(
+                        uid: lawyers[index].id,
+                        name: lawyerData['name'] ?? 'Unknown',
+                        email: lawyerData['email'] ?? 'Unknown',
+                        specialization:
+                            lawyerData['specialization'] ?? 'Unknown',
+                        rating: lawyerData['rating'] ?? 0.0,
+                        province: lawyerData['province'] ?? 'Unknown',
+                        number: lawyerData['number'] ?? 'N/A',
+                        desc: lawyerData['desc'] ?? '',
                       );
-                    }).toList();
 
-                if (lawyers.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No lawyers found.',
-                      style: TextStyle(fontSize: 16, color: Colors.black54),
-                    ),
+                      return LawyerCardBrowse(
+                        lawyer: lawyer,
+                        account: widget.account,
+                      );
+                    },
                   );
-                }
-
-                return ListView.builder(
-                  padding: EdgeInsets.all(16),
-                  itemCount: lawyers.length,
-                  itemBuilder: (context, index) {
-                    final lawyerData =
-                        lawyers[index].data() as Map<String, dynamic>;
-
-                    Lawyer lawyer = Lawyer(
-                      uid: lawyers[index].id,
-                      name: lawyerData['name'] ?? 'Unknown',
-                      email: lawyerData['email'] ?? 'Unknown',
-                      specialization: lawyerData['specialization'] ?? 'Unknown',
-                      rating: lawyerData['rating'] ?? 0.0,
-                      province: lawyerData['province'] ?? 'Unknown',
-                      number: lawyerData['number'] ?? 'N/A',
-                      desc: lawyerData['desc'] ?? '',
-                    );
-
-                    return LawyerCardBrowse(
-                      lawyer: lawyer,
-                      account: widget.account,
-                    );
-                  },
-                );
-              },
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         showSelectedLabels: false,
@@ -216,5 +225,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleRefresh() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    setState(() {});
   }
 }

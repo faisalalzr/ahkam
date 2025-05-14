@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:ahakam_v8/services/chat_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Chat extends StatefulWidget {
@@ -32,10 +34,59 @@ class _ChatState extends State<Chat> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final RxBool _isSending = false.obs;
+  bool chatEnded = false;
+  bool hasShownDialog = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfChatEnded();
+  }
+
+  Future<void> _checkIfChatEnded() async {
+    final requestSnapshot =
+        await FirebaseFirestore.instance
+            .collection('requests')
+            .where('rid', isEqualTo: widget.rid)
+            .limit(1)
+            .get();
+
+    final reviewSnapshot =
+        await FirebaseFirestore.instance
+            .collection('reviews')
+            .where('rid', isEqualTo: widget.rid)
+            .where('reviewerId', isEqualTo: widget.senderId)
+            .get();
+
+    if (requestSnapshot.docs.isNotEmpty) {
+      final docData = requestSnapshot.docs.first.data();
+      if (docData['ended?'] == true) {
+        setState(() {
+          chatEnded = true;
+        });
+
+        // Show dialog only if user hasn't reviewed yet
+        if (reviewSnapshot.docs.isEmpty) {
+          Future.delayed(Duration.zero, () {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder:
+                  (_) => RatingDialog(
+                    lawyerId: widget.receiverID,
+                    rid: widget.rid,
+                    reviewerId: widget.senderId,
+                  ),
+            );
+          });
+        }
+      }
+    }
+  }
 
   Future<void> _sendMessage() async {
     String message = _messageController.text.trim();
-    if (message.isEmpty) return;
+    if (message.isEmpty || chatEnded) return;
     _isSending.value = true;
     await _chatService.sendMessage(widget.senderId, widget.receiverID, message);
     _messageController.clear();
@@ -54,6 +105,7 @@ class _ChatState extends State<Chat> {
   }
 
   Future<void> _pickAndSendFile() async {
+    if (chatEnded) return;
     final result = await FilePicker.platform.pickFiles(allowMultiple: false);
     if (result == null) return;
 
@@ -132,7 +184,7 @@ class _ChatState extends State<Chat> {
             Text(
               time,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 color: isMe ? Colors.white70 : Colors.black54,
               ),
             ),
@@ -144,7 +196,13 @@ class _ChatState extends State<Chat> {
 
   String _formatTimestamp(Timestamp timestamp) {
     final dt = timestamp.toDate();
-    return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    var ht = dt.hour;
+    final min = dt.minute.toString().padLeft(2, '0');
+    if (ht > 12) {
+      return '${ht - 12}:$min PM';
+    } else {
+      return '$ht:$min AM';
+    }
   }
 
   Future<void> _launchURL(String url) async {
@@ -191,37 +249,176 @@ class _ChatState extends State<Chat> {
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Type a message',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+          chatEnded
+              ? Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  "This consultation has ended.",
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+              )
+              : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        decoration: InputDecoration(
+                          hintText: 'Type a message',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    SizedBox(width: 8),
+                    IconButton(
+                      icon: Icon(Icons.document_scanner),
+                      onPressed: _pickAndSendFile,
+                    ),
+                    Obx(() {
+                      return IconButton(
+                        icon: Icon(Icons.send),
+                        onPressed: _isSending.value ? null : _sendMessage,
+                      );
+                    }),
+                  ],
                 ),
-                SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(Icons.document_scanner),
-                  onPressed: _pickAndSendFile,
-                ),
-                Obx(() {
-                  return IconButton(
-                    icon: Icon(Icons.send),
-                    onPressed: _isSending.value ? null : _sendMessage,
-                  );
-                }),
-              ],
-            ),
-          ),
+              ),
         ],
+      ),
+    );
+  }
+}
+
+class RatingDialog extends StatefulWidget {
+  final String lawyerId;
+  final String rid;
+  final String reviewerId;
+
+  const RatingDialog({
+    Key? key,
+    required this.lawyerId,
+    required this.rid,
+    required this.reviewerId,
+  }) : super(key: key);
+
+  @override
+  _RatingDialogState createState() => _RatingDialogState();
+}
+
+class _RatingDialogState extends State<RatingDialog> {
+  double _rating = 0;
+  final TextEditingController _reviewController = TextEditingController();
+  bool _isSubmitting = false;
+
+  Future<void> _submitRating() async {
+    if (_rating == 0 || _reviewController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please provide a rating and a review.')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await FirebaseFirestore.instance.collection('reviews').add({
+        'lawyerId': widget.lawyerId,
+        'rid': widget.rid,
+        'reviewerId': widget.reviewerId,
+        'rating': _rating,
+        'review': _reviewController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      Navigator.of(context).pop(); // Close the dialog
+    } catch (e) {
+      print('Error submitting review: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to submit review.')));
+    } finally {
+      setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryColor = Color.fromARGB(255, 0, 0, 0); // soft brown
+    final backgroundColor = Color.fromARGB(255, 255, 250, 243); // soft beige
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: backgroundColor,
+      contentPadding: EdgeInsets.all(20),
+      title: Text(
+        'Leave a Review',
+        style: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: primaryColor,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RatingBar.builder(
+              initialRating: _rating,
+              minRating: 1,
+              itemCount: 5,
+              itemSize: 32,
+              itemBuilder:
+                  (context, _) => Icon(Icons.star, color: Colors.amberAccent),
+              onRatingUpdate: (rating) => setState(() => _rating = rating),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _reviewController,
+              maxLines: 4,
+              style: GoogleFonts.poppins(),
+              decoration: InputDecoration(
+                hintText: 'Write your review...',
+                hintStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: EdgeInsets.all(14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _isSubmitting ? null : _submitRating,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child:
+                  _isSubmitting
+                      ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                      : Text(
+                        'Submit',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+            ),
+          ],
+        ),
       ),
     );
   }

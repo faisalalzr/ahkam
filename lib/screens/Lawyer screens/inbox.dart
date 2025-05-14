@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class InboxScreen extends StatelessWidget {
   @override
@@ -113,15 +114,15 @@ class InboxScreen extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 5,
+            runSpacing: 8,
             children: [
               _filterChip("All", selected: true),
               _filterChip("Requests"),
               _filterChip("Likes"),
-              _filterChip("Comments"),
+              _filterChip("Reviews"),
               _filterChip("Follows"),
             ],
           ),
@@ -132,11 +133,7 @@ class InboxScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.markunread_mailbox_outlined,
-                  size: 50,
-                  color: Colors.grey.shade300,
-                ),
+                Icon(LucideIcons.bell, size: 50, color: Colors.grey.shade300),
                 const SizedBox(height: 12),
                 Text(
                   "No notifications yet.",

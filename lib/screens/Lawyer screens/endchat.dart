@@ -94,7 +94,8 @@ class ConsultationDetailsScreen extends StatelessWidget {
           }
 
           final String client = data['username'] ?? 'N/A';
-          final String issue = data['issue'] ?? 'N/A';
+          final String issue = data['title'] ?? 'N/A';
+          final String desc = data['desc'] ?? 'N/A';
           final String date = data['date'] ?? 'N/A';
           final String time = data['time'] ?? 'N/A';
           final Timestamp? startTimestamp = data['timestamp'];
@@ -118,7 +119,8 @@ class ConsultationDetailsScreen extends StatelessWidget {
                       children: [
                         _infoRow("Client", client),
                         _infoRow("Issue", issue),
-                        _infoRow("Scheduled Date", date),
+                        _infoRow("description", desc),
+                        _infoRow("Scheduled Date", date.substring(0, 10)),
                         _infoRow("Scheduled Time", time),
                         _infoRow(
                           "Started At",
@@ -160,7 +162,7 @@ class ConsultationDetailsScreen extends StatelessWidget {
 
   Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14.0),
+      padding: const EdgeInsets.only(bottom: 20.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -171,7 +173,7 @@ class ConsultationDetailsScreen extends StatelessWidget {
                 style: GoogleFonts.poppins(fontSize: 15, color: Colors.black87),
                 children: [
                   TextSpan(
-                    text: "$label: ",
+                    text: "$label:  ",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(text: value),

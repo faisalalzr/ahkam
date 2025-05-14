@@ -70,7 +70,7 @@ class _ChatScreenState extends State<Lawyerchat> {
 
   Future<void> _sendMessage() async {
     if (hasEnded) {
-      Get.snackbar("Consultation Ended", "You cannot send messages anymore.");
+      //Get.snackbar("Consultation Ended", "You cannot send messages anymore.");
       return;
     }
 
@@ -275,6 +275,10 @@ class _ChatScreenState extends State<Lawyerchat> {
 
   String formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
+    var hourtime = dateTime.hour;
+    if (hourtime > 12) {
+      return "${dateTime.hour - 12}:${dateTime.minute.toString().padLeft(2, '0')}";
+    }
     return "${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}";
   }
 

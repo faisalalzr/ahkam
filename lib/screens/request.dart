@@ -2,10 +2,9 @@ import 'package:ahakam_v8/models/account.dart';
 import 'package:ahakam_v8/screens/browse.dart';
 import 'package:ahakam_v8/screens/home.dart';
 import 'package:ahakam_v8/screens/messagesScreen.dart';
-import 'package:ahakam_v8/screens/notification.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -122,7 +121,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         if (snapshot.hasData == false || snapshot.hasError) return Center();
         var lawyerdata = snapshot.data!.data()!;
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -162,7 +161,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                     ),
                     if (status == 'Rejected' || status == 'Cancelled')
                       Padding(
-                        padding: const EdgeInsets.only(left: 100.0),
+                        padding: const EdgeInsets.only(left: 80.0),
                         child: IconButton(
                           icon: const Icon(Icons.close),
                           onPressed: () async {
@@ -296,8 +295,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
                             Get.to(MessagesScreen(account: widget.account));
                           },
                           child: Text(
-                            'Go to chats',
+                            'Open chat',
                             style: TextStyle(
+                              fontSize: 11,
                               color: const Color.fromARGB(255, 0, 0, 0),
                             ),
                           ),
@@ -417,12 +417,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
-        toolbarHeight: 70,
+        toolbarHeight: 50,
         title: Text(
-          "Requests",
+          "Your Requests",
           style: GoogleFonts.lato(
             textStyle: const TextStyle(
-              fontSize: 25,
+              fontSize: 22,
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),

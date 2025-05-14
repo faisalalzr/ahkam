@@ -141,7 +141,7 @@ class _LawsuitState extends State<Lawsuit> {
                       _section('Time', request['time']),
                       _section('Status:', status),
                       _section(
-                        'Created At',
+                        'Sent At',
                         formatTimestamp(request['timestamp']),
                       ),
                     ],

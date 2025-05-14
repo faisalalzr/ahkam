@@ -1,6 +1,6 @@
 import 'package:ahakam_v8/models/lawyer.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawSuitDetails.dart';
-import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerInbox.dart';
+import 'package:ahakam_v8/screens/Lawyer%20screens/inbox.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerprofile.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/morelawyer.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerWalletScreen.dart';
@@ -111,7 +111,7 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
               ],
             ),
           ),
-          // ... [Your imports remain unchanged]
+
           appBar: AppBar(
             automaticallyImplyLeading: true,
             elevation: 0,
@@ -193,7 +193,7 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
             backgroundColor: Colors.white,
             showChildOpacityTransition: false,
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(10.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -333,6 +333,7 @@ class _LawyerHomeScreenState extends State<LawyerHomeScreen> {
               ),
             ),
           ),
+
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: _selectedIndex,
             onTap: onItemTapped,
@@ -431,6 +432,7 @@ class StatusBadge extends StatelessWidget {
           SizedBox(width: 6),
           Text(
             label,
+
             style: TextStyle(
               color: isSelected ? Colors.white : color,
               fontWeight: FontWeight.bold,

@@ -66,7 +66,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
-        toolbarHeight: 40,
+        toolbarHeight: 50,
         title: Text(
           "Messages",
           style: GoogleFonts.lato(

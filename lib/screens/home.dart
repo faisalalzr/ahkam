@@ -1,6 +1,6 @@
 import 'package:ahakam_v8/models/account.dart';
 import 'package:ahakam_v8/models/lawyer.dart';
-import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerInbox.dart';
+import 'package:ahakam_v8/screens/Lawyer%20screens/inbox.dart';
 import 'package:ahakam_v8/screens/about.dart';
 import 'package:ahakam_v8/screens/browse.dart';
 import 'package:ahakam_v8/screens/messagesScreen.dart';
@@ -14,6 +14,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:get/get.dart';
 import '../widgets/category.dart';
 import 'disclaimerPage.dart';
+// No changes to your imports
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.account});
@@ -92,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 2,
+        elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black12,
         centerTitle: false,
@@ -100,14 +101,21 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(
           children: [
             CircleAvatar(
-              backgroundImage: NetworkImage(widget.account.imageUrl ?? ''),
-              radius: 20,
+              radius: 22,
+              backgroundColor: const Color.fromARGB(255, 224, 191, 109),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundImage:
+                    widget.account.imageUrl?.isNotEmpty == true
+                        ? NetworkImage(widget.account.imageUrl!)
+                        : const AssetImage("assets/images/default_avatar.png")
+                            as ImageProvider,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'Welcome',
@@ -134,9 +142,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              Get.to(InboxScreen(), transition: Transition.rightToLeftWithFade);
-            },
+            onPressed:
+                () => Get.to(
+                  () => InboxScreen(),
+                  transition: Transition.rightToLeftWithFade,
+                ),
             icon: const Icon(
               Icons.notifications_none_rounded,
               color: Colors.black87,
@@ -146,24 +156,23 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 8),
         ],
       ),
-
-      body: LiquidPullToRefresh(
-        onRefresh: _handleRefresh,
-        color: const Color.fromARGB(255, 224, 191, 109),
-        backgroundColor: Colors.white,
-        animSpeedFactor: 2.0,
-        height: 90,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _sectionTitle("Categories"),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 175,
-                child: GridView.builder(
+      body: SafeArea(
+        child: LiquidPullToRefresh(
+          onRefresh: _handleRefresh,
+          color: const Color.fromARGB(255, 224, 191, 109),
+          backgroundColor: Colors.white,
+          animSpeedFactor: 2.0,
+          height: 90,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionTitle("Categories"),
+                const SizedBox(height: 8),
+                GridView.builder(
+                  itemCount: categories.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -172,52 +181,60 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisSpacing: 12,
                     childAspectRatio: 1.2,
                   ),
-                  itemCount: categories.length,
                   itemBuilder: (context, index) {
-                    return CategoryCard(
-                      category: categories[index],
-                      account: widget.account,
+                    return Material(
+                      elevation: 2,
+                      borderRadius: BorderRadius.circular(16),
+                      child: CategoryCard(
+                        category: categories[index],
+                        account: widget.account,
+                      ),
                     );
                   },
                 ),
-              ),
-              const SizedBox(height: 20),
-              _sectionTitle("Top Lawyers"),
-              const SizedBox(height: 10),
-              FutureBuilder<List<Lawyer>>(
-                future: Lawyer.getTopLawyers(limit: 2),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(
-                      child: Text("Error loading lawyers: ${snapshot.error}"),
-                    );
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(
-                      child: Text("No top-rated lawyers available"),
-                    );
-                  }
+                const SizedBox(height: 20),
+                _sectionTitle("Top Lawyers"),
+                const SizedBox(height: 10),
+                FutureBuilder<List<Lawyer>>(
+                  future: Lawyer.getTopLawyers(limit: 2),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Text("Error loading lawyers: ${snapshot.error}"),
+                      );
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(
+                        child: Text("No top-rated lawyers available"),
+                      );
+                    }
 
-                  return Column(
-                    children:
-                        snapshot.data!
-                            .map(
-                              (lawyer) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6.0,
+                    return Column(
+                      children:
+                          snapshot.data!
+                              .map(
+                                (lawyer) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6.0,
+                                  ),
+                                  child: LawyerCard(
+                                    lawyer: lawyer,
+                                    account: widget.account,
+                                  ),
                                 ),
-                                child: LawyerCard(
-                                  lawyer: lawyer,
-                                  account: widget.account,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                  );
-                },
-              ),
-            ],
+                              )
+                              .toList(),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -227,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color.fromARGB(255, 72, 47, 0),
+        selectedItemColor: const Color.fromARGB(255, 87, 56, 0),
         unselectedItemColor: Colors.grey,
         elevation: 10,
         items: const [
@@ -261,9 +278,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Text(
       text,
       style: GoogleFonts.lato(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: const Color.fromARGB(255, 72, 47, 0),
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF4A2F00),
+        letterSpacing: 0.3,
       ),
     );
   }
