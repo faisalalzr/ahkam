@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 class LawyerCardBrowse extends StatelessWidget {
   final Lawyer lawyer;
   final Account account;
+
   const LawyerCardBrowse({
     super.key,
     required this.lawyer,
@@ -16,27 +17,44 @@ class LawyerCardBrowse extends StatelessWidget {
   });
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> getinfo() async {
-    var fyre = FirebaseFirestore.instance;
-    var query =
-        await fyre
-            .collection('account')
-            .where('uid', isEqualTo: lawyer!.uid)
-            .limit(1)
-            .get();
-    return query.docs.first;
+    var query = await FirebaseFirestore.instance
+        .collection('account')
+        .where('uid', isEqualTo: lawyer.uid)
+        .limit(1)
+        .get();
+
+    if (query.docs.isNotEmpty) {
+      return query.docs.first;
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
       future: getinfo(),
       builder: (context, snapshot) {
-        if (snapshot.hasError ||
+        if (snapshot.hasError) {
+          return const Center(child: Text("Error loading lawyer info"));
+        }
+        if (!snapshot.hasData ||
             snapshot.data == null ||
             !snapshot.data!.exists) {
-          return Center(child: Text(""));
+          // You could show a loading spinner here if you want
+          return const Center(child: SizedBox.shrink());
         }
-        var userdata = snapshot.data!.data()!;
+
+        final userdata = snapshot.data!.data() ?? {};
+
+        ImageProvider avatarImage;
+        if (userdata['imageUrl'] != null &&
+            userdata['imageUrl'] is String &&
+            userdata['imageUrl'].isNotEmpty) {
+          avatarImage = NetworkImage(userdata['imageUrl']);
+        } else {
+          avatarImage = const AssetImage('assets/images/brad.webp');
+        }
+
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
@@ -54,18 +72,12 @@ class LawyerCardBrowse extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Lawyer Profile Pic or Placeholder
               CircleAvatar(
                 radius: 30,
-                backgroundImage:
-                    userdata['imageUrl'] != null
-                        ? NetworkImage(userdata['imageUrl'])
-                        : const AssetImage('assets/images/brad.webp'),
+                backgroundImage: avatarImage,
                 backgroundColor: Colors.grey[300],
               ),
               const SizedBox(width: 16),
-
-              // Lawyer Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,8 +112,6 @@ class LawyerCardBrowse extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // View Button
               ElevatedButton(
                 onPressed: () {
                   Get.to(
@@ -118,10 +128,8 @@ class LawyerCardBrowse extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   textStyle: GoogleFonts.lato(fontSize: 12),
                 ),
                 child: Text("View", style: GoogleFonts.lato()),

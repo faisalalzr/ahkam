@@ -13,22 +13,37 @@ class LawyerCard extends StatelessWidget {
   const LawyerCard({super.key, required this.lawyer, required this.account});
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> getinfo() async {
-    var query =
-        await FirebaseFirestore.instance
-            .collection('account')
-            .where('email', isEqualTo: lawyer!.email)
-            .limit(1)
-            .get();
-    return query.docs.first;
+    var query = await FirebaseFirestore.instance
+        .collection('account')
+        .where('email', isEqualTo: lawyer.email)
+        .limit(1)
+        .get();
+    if (query.docs.isNotEmpty) {
+      return query.docs.first;
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
       future: getinfo(),
       builder: (context, snapshot) {
-        if (snapshot.hasData == false || snapshot.hasError) return Center();
-        var lawyerdata = snapshot.data!.data()!;
+        if (!snapshot.hasData || snapshot.hasError) {
+          return const Center(); // or a loading placeholder
+        }
+
+        final lawyerdata = snapshot.data?.data() ?? {};
+
+        // Safe image handling
+        ImageProvider backgroundImage;
+        final imageUrl = lawyerdata['imageUrl'];
+        if (imageUrl != null && imageUrl is String && imageUrl.isNotEmpty) {
+          backgroundImage = NetworkImage(imageUrl);
+        } else {
+          backgroundImage = const AssetImage('assets/images/brad.webp');
+        }
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
@@ -49,10 +64,7 @@ class LawyerCard extends StatelessWidget {
               // Lawyer Profile Pic or Placeholder
               CircleAvatar(
                 radius: 25,
-                backgroundImage:
-                    lawyerdata['imageUrl'] != null
-                        ? NetworkImage(lawyerdata['imageUrl'])
-                        : const AssetImage('assets/images/brad.webp'),
+                backgroundImage: backgroundImage,
                 backgroundColor: Colors.grey[300],
               ),
               const SizedBox(width: 16),
@@ -83,7 +95,7 @@ class LawyerCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      ' ${lawyerdata['specialization']}  law',
+                      '${lawyerdata['specialization'] ?? 'General'} law',
                       style: GoogleFonts.lato(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -105,15 +117,13 @@ class LawyerCard extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+                  foregroundColor: Colors.black,
                   backgroundColor: const Color.fromARGB(255, 246, 236, 206),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   textStyle: GoogleFonts.lato(fontSize: 12),
                 ),
                 child: Text("View", style: GoogleFonts.lato()),
