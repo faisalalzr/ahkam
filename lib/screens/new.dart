@@ -41,13 +41,7 @@ class _NewState extends State<New> {
   ];
   String? _selectedProfession;
 
-  final List<String> provinces = [
-    "Amman (capital)",
-    "Zarqaa",
-    "ma'an",
-    "Irbid",
-    "Aqaba",
-  ];
+  final List<String> provinces = ["Amman", "Zarqaa", "ma'an", "Irbid", "Aqaba"];
   String? _selectedprovinces;
   bool isSubmitting = false;
 
@@ -240,13 +234,29 @@ class _NewState extends State<New> {
               );
             }).toList(),
         decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.brown),
-          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          filled: true,
+          fillColor: Colors.white,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: const Color.fromARGB(0, 224, 224, 224),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Color.fromARGB(0, 0, 0, 0)),
+          ),
         ),
-        icon: Icon(Icons.arrow_drop_down, color: Colors.brown),
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: const Color.fromARGB(255, 0, 0, 0),
+        ),
         dropdownColor: Color(0xFFFFFBF5),
-        style: TextStyle(color: Colors.black87, fontSize: 16), // <- important
+        style: TextStyle(
+          color: const Color.fromARGB(255, 0, 0, 0),
+          fontSize: 16,
+        ), // <- important
         borderRadius: BorderRadius.circular(15),
       ),
     );

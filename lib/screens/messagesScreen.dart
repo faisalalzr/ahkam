@@ -21,6 +21,9 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
+  bool isSelectionMode = false;
+  Set<String> selectedMessages = {};
+
   final ChatService chatService = ChatService();
   late AuthService authService;
   User? currentUser;
@@ -62,30 +65,60 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-        ),
-        toolbarHeight: 50,
+        leading:
+            isSelectionMode
+                ? IconButton(
+                  icon: Icon(Icons.close, color: Colors.black),
+                  onPressed: () {
+                    setState(() {
+                      isSelectionMode = false;
+                      selectedMessages.clear();
+                    });
+                  },
+                )
+                : Icon(Icons.search, color: Colors.black),
         title: Text(
-          "Messages",
+          isSelectionMode ? '${selectedMessages.length} selected' : "Messages",
           style: GoogleFonts.lato(
-            textStyle: const TextStyle(
+            textStyle: TextStyle(
+              fontWeight: FontWeight.w700,
               fontSize: 20,
-              color: Color.fromARGB(255, 0, 0, 0),
+              color: const Color.fromARGB(255, 0, 0, 0),
             ),
           ),
         ),
         centerTitle: true,
-        elevation: 0,
-        backgroundColor: Color.fromARGB(255, 255, 255, 255), // Purple color
+        backgroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: Icon(Icons.search, color: const Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () {}, // Implement search functionality here
-          ),
+          if (!isSelectionMode)
+            IconButton(
+              icon: Icon(Icons.select_all, color: Colors.black),
+              onPressed: () {
+                setState(() {
+                  isSelectionMode = true;
+                });
+              },
+            ),
+          if (isSelectionMode)
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.black),
+              onPressed: () {
+                // Handle deletion here
+                for (String id in selectedMessages) {
+                  FirebaseFirestore.instance
+                      .collection('requests')
+                      .doc(id)
+                      .delete();
+                }
+                setState(() {
+                  selectedMessages.clear();
+                  isSelectionMode = false;
+                });
+              },
+            ),
         ],
       ),
+
       body: _buildUserList(),
       bottomNavigationBar: _buildBottomNavBar(),
     );
@@ -177,11 +210,47 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       horizontal: 16,
                     ),
                     child: Card(
+                      color: const Color(0xFFFFF8F2),
+
                       elevation: 5,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: ListTile(
+                        onLongPress: () {
+                          setState(() {
+                            isSelectionMode = true;
+                            selectedMessages.add(request['id']);
+                          });
+                        },
+                        onTap: () {
+                          if (isSelectionMode) {
+                            setState(() {
+                              if (selectedMessages.contains(request['id'])) {
+                                selectedMessages.remove(request['id']);
+                              } else {
+                                selectedMessages.add(request['id']);
+                              }
+                            });
+                          } else {
+                            // Normal navigation
+                            Get.to(
+                              transition: Transition.rightToLeft,
+                              () => Chat(
+                                receivername: request['lawyerName'] ?? '',
+                                senderId: request["userId"] ?? '',
+                                receiverID: request["lawyerId"] ?? '',
+                                rid: request['rid'] ?? '',
+                                imageurl: lawyerData?["imageUrl"] ?? '',
+                              ),
+                            );
+                          }
+                        },
+                        selected:
+                            isSelectionMode &&
+                            selectedMessages.contains(request['id']),
+                        selectedTileColor: Colors.orange[100],
+
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 15,
                           horizontal: 20,
@@ -199,18 +268,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             lawyerData?["imageUrl"],
                           ),
                         ),
-                        onTap: () {
-                          Get.to(
-                            transition: Transition.rightToLeft,
-                            () => Chat(
-                              receivername: request['lawyerName'] ?? '',
-                              senderId: request["userId"] ?? '',
-                              receiverID: request["lawyerId"] ?? '',
-                              rid: request['rid'] ?? '',
-                              imageurl: lawyerData?["imageUrl"] ?? '',
-                            ),
-                          );
-                        },
                       ),
                     ),
                   );

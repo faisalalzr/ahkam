@@ -32,9 +32,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       theme: ThemeData(
-        primaryColor: Color(0xFFF5EEDC),
+        primaryColor: Color(0xFFFFF8F2),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFFFF8F2)),
         scaffoldBackgroundColor: Colors.white,
-        buttonTheme: ButtonThemeData(buttonColor: Color(0xFFF5EEDC)),
+        buttonTheme: ButtonThemeData(buttonColor: Colors.white),
       ),
       debugShowCheckedModeBanner: false,
       home: LoginScreen(),

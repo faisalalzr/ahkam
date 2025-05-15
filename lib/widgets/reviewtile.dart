@@ -25,6 +25,7 @@ class ReviewTile extends StatelessWidget {
     final formattedDate = DateFormat.yMMMMd().format(timestamp.toDate());
 
     return Card(
+      elevation: 10,
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -35,10 +36,11 @@ class ReviewTile extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundImage: reviewerImageUrl != null
-                      ? NetworkImage(reviewerImageUrl!)
-                      : const AssetImage('assets/default_user.png')
-                          as ImageProvider,
+                  backgroundImage:
+                      reviewerImageUrl != null
+                          ? NetworkImage(reviewerImageUrl!)
+                          : const AssetImage('assets/default_user.png')
+                              as ImageProvider,
                 ),
                 const SizedBox(width: 10),
                 Expanded(

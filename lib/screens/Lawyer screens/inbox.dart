@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -10,6 +12,10 @@ class InboxScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: const Color(0xFFF9F6F1),
         appBar: AppBar(
+          leading: IconButton(
+            onPressed: () => Get.back(),
+            icon: Icon(Icons.arrow_back_ios_new, size: 17),
+          ),
           backgroundColor: const Color(0xFFF9F6F1),
           elevation: 0,
           centerTitle: true,
@@ -123,7 +129,7 @@ class InboxScreen extends StatelessWidget {
               _filterChip("Requests"),
               _filterChip("Likes"),
               _filterChip("Reviews"),
-              _filterChip("Follows"),
+              _filterChip("Messages"),
             ],
           ),
         ),
@@ -153,6 +159,7 @@ class InboxScreen extends StatelessWidget {
         label,
         style: GoogleFonts.poppins(
           fontWeight: FontWeight.w500,
+          fontSize: 12,
           color: selected ? Colors.white : const Color(0xFF4B3832),
         ),
       ),
@@ -160,7 +167,9 @@ class InboxScreen extends StatelessWidget {
       selectedColor: const Color.fromARGB(255, 0, 0, 0),
       backgroundColor: Colors.grey.shade200,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      onSelected: (_) {},
+      onSelected: (_) {
+        selected = true;
+      },
     );
   }
 }

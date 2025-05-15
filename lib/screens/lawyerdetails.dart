@@ -395,10 +395,12 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
               child: Column(
                 children: [
                   Card(
+                    color: Color.fromARGB(255, 243, 243, 243),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    elevation: 4,
+                    elevation: 10,
+
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,

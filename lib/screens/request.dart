@@ -297,7 +297,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                           child: Text(
                             'Open chat',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               color: const Color.fromARGB(255, 0, 0, 0),
                             ),
                           ),
@@ -422,7 +422,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
           "Your Requests",
           style: GoogleFonts.lato(
             textStyle: const TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
