@@ -1,7 +1,7 @@
 import 'package:ahakam_v8/models/lawyer.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerHomeScreen.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerprofile.dart';
-import 'package:ahakam_v8/screens/Lawyer%20screens/morelawyer.dart';
+
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerWalletScreen.dart';
 import 'package:ahakam_v8/screens/Lawyer%20screens/lawyerchat.dart';
 
@@ -114,12 +114,11 @@ class _LawyermessagesScreenState extends State<Lawyermessages> {
   }
 
   Future<List<Map<String, dynamic>>> fetchACCRequests() async {
-    QuerySnapshot querySnapshot =
-        await _firestore
-            .collection('requests')
-            .where('lawyerId', isEqualTo: widget.lawyer.uid)
-            .where('status', isEqualTo: "Accepted")
-            .get();
+    QuerySnapshot querySnapshot = await _firestore
+        .collection('requests')
+        .where('lawyerId', isEqualTo: widget.lawyer.uid)
+        .where('status', isEqualTo: "Accepted")
+        .get();
 
     return querySnapshot.docs
         .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
@@ -189,19 +188,18 @@ class _LawyermessagesScreenState extends State<Lawyermessages> {
                             imageUrl != null && imageUrl.toString().isNotEmpty
                                 ? NetworkImage(imageUrl)
                                 : null,
-                        child:
-                            imageUrl == null || imageUrl.toString().isEmpty
-                                ? Text(
-                                  request["username"]
-                                          ?.substring(0, 1)
-                                          .toUpperCase() ??
-                                      'U',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                                : null,
+                        child: imageUrl == null || imageUrl.toString().isEmpty
+                            ? Text(
+                                request["username"]
+                                        ?.substring(0, 1)
+                                        .toUpperCase() ??
+                                    'U',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
                         backgroundColor: const Color(0xFF1E3A5F),
                       ),
                       onTap: () {

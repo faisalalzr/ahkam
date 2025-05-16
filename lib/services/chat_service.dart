@@ -21,8 +21,8 @@ class Message {
 
   Map<String, dynamic> toMap() {
     return {
-      'senderID': senderID,
-      'receiverID': receiverID,
+      'senderId': senderID,
+      'receiverId': receiverID,
       'message': message,
       'timestamp': timestamp,
       'type': type,
@@ -52,19 +52,19 @@ class ChatService {
         .where('status', isEqualTo: 'Accepted')
         .snapshots()
         .asyncMap((snapshot) async {
-          final List<Map<String, dynamic>> results = [];
-          for (var doc in snapshot.docs) {
-            final userSnap =
-                await _firestore.collection('account').doc(doc['userId']).get();
-            if (userSnap.exists) {
-              final userData = userSnap.data()!;
-              userData['request'] = doc.data();
-              userData['requestId'] = doc.id;
-              results.add(userData);
-            }
-          }
-          return results;
-        });
+      final List<Map<String, dynamic>> results = [];
+      for (var doc in snapshot.docs) {
+        final userSnap =
+            await _firestore.collection('account').doc(doc['userId']).get();
+        if (userSnap.exists) {
+          final userData = userSnap.data()!;
+          userData['request'] = doc.data();
+          userData['requestId'] = doc.id;
+          results.add(userData);
+        }
+      }
+      return results;
+    });
   }
 
   Stream<List<Map<String, dynamic>>> getLawyerStream() {
@@ -137,14 +137,8 @@ class ChatService {
       final String fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
       final String filePath = 'chat/$fileName';
-
-      final storageResponse = await _supabase.storage
-          .from('imagges')
-          .upload(filePath, file);
-
-      final publicUrl = _supabase.storage
-          .from('imagges')
-          .getPublicUrl(filePath);
+      final publicUrl =
+          _supabase.storage.from('imagges').getPublicUrl(filePath);
 
       return publicUrl;
     } catch (e) {

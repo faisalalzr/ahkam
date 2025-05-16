@@ -28,7 +28,7 @@ class ConsultationDetailsScreen extends StatelessWidget {
       builder: (_) => AlertDialog(
         title: Text(
           "End Consultation",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         content: Text(
           "Are you sure you want to end this consultation?",

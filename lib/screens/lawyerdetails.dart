@@ -132,18 +132,15 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
 
   Future<void> _sendRequest() async {
     if (_selectedDate == null || _selectedTime == null) {
-      Get.snackbar('Invalid input', 'Please select both a date and time.');
       return;
     }
     if (_titleCont.text.trim().isEmpty ||
         _descriptionCont.text.trim().isEmpty) {
-      Get.snackbar('Missing Information', 'Please fill in all fields.');
       return;
     }
 
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      Get.snackbar('Error', 'You must be logged in to send a request.');
       return;
     }
 
@@ -193,6 +190,7 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => Dialog(
+        backgroundColor: Colors.grey[125],
         insetPadding: const EdgeInsets.symmetric(
           horizontal: 10,
           vertical: 20,
@@ -201,29 +199,24 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Container(
-          width: double.infinity, // Full width
-          height:
-              MediaQuery.of(context).size.height * 0.92, // Almost full height
-          padding: const EdgeInsets.all(20),
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height * 0.97,
+          padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(
                     width: 24,
-                  ), // Placeholder to balance close button
+                  ),
                   Text(
                     'Book Consultation',
                     style: GoogleFonts.lato(
                       fontWeight: FontWeight.bold,
                       fontSize: 22,
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
@@ -318,7 +311,7 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
             : null,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: Colors.white,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(

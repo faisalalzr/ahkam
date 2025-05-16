@@ -4,10 +4,14 @@ import 'package:ahakam_v8/services/chat_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'package:flutter/services.dart';
 
 class Chat extends StatefulWidget {
   final String receiverID;
@@ -101,14 +105,54 @@ class _ChatState extends State<Chat> {
     }
   }
 
-  Future<void> _pickAndSendFile() async {}
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> pickAndUploadFile() async {
+    try {
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.gallery); // or .camera
+      if (pickedFile == null) return;
+
+      final file = File(pickedFile.path);
+      final fileBytes = await file.readAsBytes();
+
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString() +
+          "_" +
+          pickedFile.name;
+
+      final response = await Supabase.instance.client.storage
+          .from('imagges')
+          .uploadBinary(fileName, fileBytes,
+              fileOptions: FileOptions(contentType: 'image/jpeg'));
+
+      final imageUrl = Supabase.instance.client.storage
+          .from('imagges')
+          .getPublicUrl(fileName);
+      List<String> ids = [widget.senderId, widget.receiverID]..sort();
+      String chatroomId = ids.join('_');
+      print('File uploaded. Public URL: $imageUrl');
+      await FirebaseFirestore.instance
+          .collection("chat_rooms")
+          .doc(chatroomId)
+          .collection("messages")
+          .add({
+        'senderId': widget.senderId,
+        'receiverId': widget.receiverID,
+        'timestamp': FieldValue.serverTimestamp(),
+        'type': 'image',
+        'message': imageUrl,
+      });
+    } catch (e) {
+      print('Upload failed: $e');
+    }
+  }
 
   Widget _buildMessageItem(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data()!;
-    final isMe = data['senderID'] == widget.senderId;
+    final isMe = data['senderId'] == widget.senderId;
     final message = data['message'] ?? '';
     final type = data['type'] ?? '';
-    final time = _formatTimestamp(data['timestamp']);
+    final time = _formatTimestamp(data['timestamp'] ?? 0);
 
     final isImageMessage = type == 'image' || message.contains('supabase.co');
 
@@ -174,13 +218,11 @@ class _ChatState extends State<Chat> {
 
   String _formatTimestamp(Timestamp timestamp) {
     final dt = timestamp.toDate();
-    var ht = dt.hour;
+    final hour = dt.hour;
     final min = dt.minute.toString().padLeft(2, '0');
-    if (ht > 12) {
-      return '${ht - 12}:$min PM';
-    } else {
-      return '$ht:$min AM';
-    }
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    return '$displayHour:$min $period';
   }
 
   Future<void> _launchURL(String url) async {
@@ -219,11 +261,15 @@ class _ChatState extends State<Chat> {
                 }
                 final docs = snapshot.data!.docs;
                 return ListView.builder(
-                  controller: _scrollController,
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) =>
-                      _buildMessageItem(docs[index]),
-                );
+                    controller: _scrollController,
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      if (index == docs.length - 1) {
+                        Future.delayed(
+                            Duration(milliseconds: 100), _scrollToBottom);
+                      }
+                      return _buildMessageItem(docs[index]);
+                    });
               },
             ),
           ),
@@ -254,7 +300,7 @@ class _ChatState extends State<Chat> {
                       SizedBox(width: 8),
                       IconButton(
                         icon: Icon(Icons.document_scanner),
-                        onPressed: _pickAndSendFile,
+                        onPressed: pickAndUploadFile,
                       ),
                       Obx(() {
                         return IconButton(
@@ -307,7 +353,7 @@ class _RatingDialogState extends State<RatingDialog> {
           FirebaseFirestore.instance.collection('account').doc(widget.lawyerId);
 
       // Add the review document
-      await reviewsRef.add({
+      await reviewsRef.doc('${widget.rid}_${widget.reviewerId}').set({
         'lawyerId': widget.lawyerId,
         'rid': widget.rid,
         'reviewerId': widget.reviewerId,

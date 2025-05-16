@@ -65,18 +65,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading:
-            isSelectionMode
-                ? IconButton(
-                  icon: Icon(Icons.close, color: Colors.black),
-                  onPressed: () {
-                    setState(() {
-                      isSelectionMode = false;
-                      selectedMessages.clear();
-                    });
-                  },
-                )
-                : Icon(Icons.search, color: Colors.black),
+        automaticallyImplyLeading: false,
         title: Text(
           isSelectionMode ? '${selectedMessages.length} selected' : "Messages",
           style: GoogleFonts.lato(
@@ -89,36 +78,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
-        actions: [
-          if (!isSelectionMode)
-            IconButton(
-              icon: Icon(Icons.select_all, color: Colors.black),
-              onPressed: () {
-                setState(() {
-                  isSelectionMode = true;
-                });
-              },
-            ),
-          if (isSelectionMode)
-            IconButton(
-              icon: Icon(Icons.delete, color: Colors.black),
-              onPressed: () {
-                // Handle deletion here
-                for (String id in selectedMessages) {
-                  FirebaseFirestore.instance
-                      .collection('requests')
-                      .doc(id)
-                      .delete();
-                }
-                setState(() {
-                  selectedMessages.clear();
-                  isSelectionMode = false;
-                });
-              },
-            ),
-        ],
       ),
-
       body: _buildUserList(),
       bottomNavigationBar: _buildBottomNavBar(),
     );
@@ -155,12 +115,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Future<List<Map<String, dynamic>>> fetchACCRequests() async {
     var _firestore = FirebaseFirestore.instance;
-    QuerySnapshot querySnapshot =
-        await _firestore
-            .collection('requests')
-            .where('userId', isEqualTo: widget.account.uid)
-            .where('status', isEqualTo: "Accepted")
-            .get();
+    QuerySnapshot querySnapshot = await _firestore
+        .collection('requests')
+        .where('userId', isEqualTo: widget.account.uid)
+        .where('status', isEqualTo: "Accepted")
+        .get();
 
     return querySnapshot.docs
         .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
@@ -190,11 +149,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
               var _firestore = FirebaseFirestore.instance;
               return FutureBuilder<DocumentSnapshot>(
-                future:
-                    _firestore
-                        .collection('account')
-                        .doc(request['lawyerId'])
-                        .get(),
+                future: _firestore
+                    .collection('account')
+                    .doc(request['lawyerId'])
+                    .get(),
                 builder: (context, userSnapshot) {
                   if (userSnapshot.connectionState == ConnectionState.waiting) {
                     return ListTile();
@@ -210,66 +168,78 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       horizontal: 16,
                     ),
                     child: Card(
-                      color: const Color(0xFFFFF8F2),
-
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        onLongPress: () {
-                          setState(() {
-                            isSelectionMode = true;
-                            selectedMessages.add(request['id']);
-                          });
-                        },
-                        onTap: () {
-                          if (isSelectionMode) {
+                        color: const Color(0xFFFFF8F2),
+                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          onLongPress: () {
                             setState(() {
-                              if (selectedMessages.contains(request['id'])) {
-                                selectedMessages.remove(request['id']);
-                              } else {
-                                selectedMessages.add(request['id']);
-                              }
+                              isSelectionMode = true;
+                              selectedMessages.add(request['id']);
                             });
-                          } else {
-                            // Normal navigation
-                            Get.to(
-                              transition: Transition.rightToLeft,
-                              () => Chat(
-                                receivername: request['lawyerName'] ?? '',
-                                senderId: request["userId"] ?? '',
-                                receiverID: request["lawyerId"] ?? '',
-                                rid: request['rid'] ?? '',
-                                imageurl: lawyerData?["imageUrl"] ?? '',
-                              ),
-                            );
-                          }
-                        },
-                        selected:
-                            isSelectionMode &&
-                            selectedMessages.contains(request['id']),
-                        selectedTileColor: Colors.orange[100],
-
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 15,
-                          horizontal: 20,
-                        ),
-                        title: Text(
-                          lawyerData?["name"] ?? 'Unknown User',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          "Tap to chat",
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                            lawyerData?["imageUrl"],
+                          },
+                          onTap: () {
+                            if (isSelectionMode) {
+                              setState(() {
+                                if (selectedMessages.contains(request['id'])) {
+                                  selectedMessages.remove(request['id']);
+                                } else {
+                                  selectedMessages.add(request['id']);
+                                }
+                              });
+                            } else {
+                              if (request['paid'] == true) {
+                                // Allow chat only if paid
+                                Get.to(
+                                  transition: Transition.rightToLeft,
+                                  () => Chat(
+                                    receivername: request['lawyerName'] ?? '',
+                                    senderId: request["userId"] ?? '',
+                                    receiverID: request["lawyerId"] ?? '',
+                                    rid: request['rid'] ?? '',
+                                    imageurl: lawyerData?["imageUrl"] ?? '',
+                                  ),
+                                );
+                              } else {}
+                            }
+                          },
+                          selected: isSelectionMode &&
+                              selectedMessages.contains(request['id']),
+                          selectedTileColor: Colors.orange[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 15,
+                            horizontal: 20,
                           ),
-                        ),
-                      ),
-                    ),
+                          title: Text(
+                            lawyerData?["name"] ?? 'Unknown User',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            request['paid'] == true
+                                ? "Tap to chat"
+                                : "Payment required",
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(
+                              lawyerData?["imageUrl"],
+                            ),
+                          ),
+                          trailing: request['paid'] == false
+                              ? ElevatedButton(
+                                  onPressed: () {
+                                    // Trigger payment flow here
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                  ),
+                                  child: const Text("Pay"),
+                                )
+                              : null,
+                        )),
                   );
                 },
               );
