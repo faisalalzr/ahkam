@@ -6,7 +6,7 @@ import 'package:ahakam_v8/screens/browse.dart';
 import 'package:ahakam_v8/screens/messagesScreen.dart';
 import 'package:ahakam_v8/screens/profile.dart';
 import 'package:ahakam_v8/screens/request.dart';
-import 'package:ahakam_v8/widgets/lawyer_card.dart';
+import 'package:ahakam_v8/widgets/lawyerHomecard.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
@@ -105,11 +105,10 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: const Color.fromARGB(255, 224, 191, 109),
               child: CircleAvatar(
                 radius: 20,
-                backgroundImage:
-                    widget.account.imageUrl?.isNotEmpty == true
-                        ? NetworkImage(widget.account.imageUrl!)
-                        : const AssetImage("assets/images/default_avatar.png")
-                            as ImageProvider,
+                backgroundImage: widget.account.imageUrl?.isNotEmpty == true
+                    ? NetworkImage(widget.account.imageUrl!)
+                    : const AssetImage("assets/images/default_avatar.png")
+                        as ImageProvider,
               ),
             ),
             const SizedBox(width: 12),
@@ -142,11 +141,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            onPressed:
-                () => Get.to(
-                  () => InboxScreen(),
-                  transition: Transition.rightToLeftWithFade,
-                ),
+            onPressed: () => Get.to(
+              () => InboxScreen(),
+              transition: Transition.rightToLeftWithFade,
+            ),
             icon: const Icon(
               Icons.notifications_none_rounded,
               color: Colors.black87,
@@ -216,20 +214,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
 
                     return Column(
-                      children:
-                          snapshot.data!
-                              .map(
-                                (lawyer) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 6.0,
-                                  ),
-                                  child: LawyerCard(
-                                    lawyer: lawyer,
-                                    account: widget.account,
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                      children: snapshot.data!
+                          .map(
+                            (lawyer) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6.0,
+                              ),
+                              child: LawyerCard(
+                                lawyer: lawyer,
+                                account: widget.account,
+                              ),
+                            ),
+                          )
+                          .toList(),
                     );
                   },
                 ),

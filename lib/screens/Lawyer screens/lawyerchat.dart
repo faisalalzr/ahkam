@@ -4,7 +4,7 @@ import 'package:ahakam_v8/services/auth_service.dart';
 import 'package:ahakam_v8/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:file_picker/file_picker.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -50,12 +50,11 @@ class _ChatScreenState extends State<Lawyerchat> {
     final userId = _authService.getCurrentUser()?.uid;
     if (userId == null) return;
 
-    final query =
-        await FirebaseFirestore.instance
-            .collection('requests')
-            .where('rid', isEqualTo: widget.rid)
-            .limit(1)
-            .get();
+    final query = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('rid', isEqualTo: widget.rid)
+        .limit(1)
+        .get();
 
     if (query.docs.isNotEmpty) {
       final doc = query.docs.first;
@@ -145,7 +144,6 @@ class _ChatScreenState extends State<Lawyerchat> {
           ),
         ],
       ),
-
       body: Column(
         children: [
           // if (isLawyer && !hasEnded)
@@ -238,11 +236,10 @@ class _ChatScreenState extends State<Lawyerchat> {
               Image.network(message, height: 150)
             else if (message.startsWith('http'))
               GestureDetector(
-                onTap:
-                    () => launchUrl(
-                      Uri.parse(message),
-                      mode: LaunchMode.inAppWebView,
-                    ),
+                onTap: () => launchUrl(
+                  Uri.parse(message),
+                  mode: LaunchMode.inAppWebView,
+                ),
                 child: Text(
                   "View Document",
                   style: TextStyle(
@@ -255,7 +252,7 @@ class _ChatScreenState extends State<Lawyerchat> {
               Text(
                 message,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: isMe ? Colors.white : const Color(0xFF1E3A5F),
                 ),
               ),
@@ -263,7 +260,7 @@ class _ChatScreenState extends State<Lawyerchat> {
             Text(
               formattedTime,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 color: isMe ? Colors.white70 : const Color(0xFF1E3A5F),
               ),
             ),
@@ -325,20 +322,7 @@ class _ChatScreenState extends State<Lawyerchat> {
                 size: 18,
                 color: const Color(0xFF1E3A5F),
               ),
-              onPressed: () async {
-                final result = await FilePicker.platform.pickFiles();
-                if (result != null && result.files.single.path != null) {
-                  final file = File(result.files.single.path!);
-                  final url = await _chatService.uploadFile(file);
-                  if (url != null) {
-                    await _chatService.sendMessage(
-                      widget.senderId,
-                      widget.receiverID,
-                      url,
-                    );
-                  }
-                }
-              },
+              onPressed: () async {},
             ),
           ),
           SizedBox(width: 4),

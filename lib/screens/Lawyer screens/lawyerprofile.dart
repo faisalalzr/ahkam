@@ -27,12 +27,11 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> getInfo() async {
     try {
-      var querySnapshot =
-          await firestore
-              .collection('account')
-              .where('email', isEqualTo: widget.lawyer.email)
-              .limit(1)
-              .get();
+      var querySnapshot = await firestore
+          .collection('account')
+          .where('email', isEqualTo: widget.lawyer.email)
+          .limit(1)
+          .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         return querySnapshot.docs.first;
@@ -78,7 +77,7 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xFFF5F5F5),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text('Profile', style: GoogleFonts.poppins(color: Colors.black)),
@@ -105,7 +104,6 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
-
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(
@@ -155,6 +153,7 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     elevation: 4,
+                    color: Colors.white,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -173,9 +172,8 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
                                             userData['imageUrl'].isNotEmpty)
                                         ? NetworkImage(userData['imageUrl'])
                                         : const AssetImage(
-                                              'assets/images/brad.webp',
-                                            )
-                                            as ImageProvider,
+                                            'assets/images/brad.webp',
+                                          ) as ImageProvider,
                               ),
                               SizedBox(width: 16),
                               Expanded(
@@ -237,8 +235,10 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildStatCard("Balance", "0.0", LucideIcons.wallet),
-                      _buildStatCard("Cases", "10", LucideIcons.folderArchive),
-                      _buildStatCard("Rating", "0.0", LucideIcons.star),
+                      _buildStatCard("Cases", "${userData['cases']}",
+                          LucideIcons.folderArchive),
+                      _buildStatCard(
+                          "Rating", "${userData['rating']}", LucideIcons.star),
                     ],
                   ),
                   const SizedBox(height: 25),
@@ -324,6 +324,7 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
   Widget _buildStatCard(String label, String value, IconData icon) {
     return Expanded(
       child: Card(
+        color: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 3,
         child: Padding(
@@ -355,7 +356,8 @@ class _lawyerProfileScreenState extends State<lawyerProfileScreen> {
 
   Widget _buildOptionCard(IconData icon, String label, VoidCallback? onTap) {
     return Card(
-      elevation: 2,
+      color: Colors.white,
+      elevation: 5,
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(

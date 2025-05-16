@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:ahakam_v8/services/chat_service.dart';
-import 'package:file_picker/file_picker.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
@@ -44,19 +44,17 @@ class _ChatState extends State<Chat> {
   }
 
   Future<void> _checkIfChatEnded() async {
-    final requestSnapshot =
-        await FirebaseFirestore.instance
-            .collection('requests')
-            .where('rid', isEqualTo: widget.rid)
-            .limit(1)
-            .get();
+    final requestSnapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('rid', isEqualTo: widget.rid)
+        .limit(1)
+        .get();
 
-    final reviewSnapshot =
-        await FirebaseFirestore.instance
-            .collection('reviews')
-            .where('rid', isEqualTo: widget.rid)
-            .where('reviewerId', isEqualTo: widget.senderId)
-            .get();
+    final reviewSnapshot = await FirebaseFirestore.instance
+        .collection('reviews')
+        .where('rid', isEqualTo: widget.rid)
+        .where('reviewerId', isEqualTo: widget.senderId)
+        .get();
 
     if (requestSnapshot.docs.isNotEmpty) {
       final docData = requestSnapshot.docs.first.data();
@@ -71,12 +69,11 @@ class _ChatState extends State<Chat> {
             showDialog(
               context: context,
               barrierDismissible: false,
-              builder:
-                  (_) => RatingDialog(
-                    lawyerId: widget.receiverID,
-                    rid: widget.rid,
-                    reviewerId: widget.senderId,
-                  ),
+              builder: (_) => RatingDialog(
+                lawyerId: widget.receiverID,
+                rid: widget.rid,
+                reviewerId: widget.senderId,
+              ),
             );
           });
         }
@@ -104,26 +101,7 @@ class _ChatState extends State<Chat> {
     }
   }
 
-  Future<void> _pickAndSendFile() async {
-    if (chatEnded) return;
-    final result = await FilePicker.platform.pickFiles(allowMultiple: false);
-    if (result == null) return;
-
-    final file = File(result.files.single.path!);
-    final url = await _chatService.uploadFile(file);
-    if (url != null) {
-      await _chatService.sendMessage(
-        widget.senderId,
-        widget.receiverID,
-        url,
-        type:
-            result.files.single.extension!.startsWith('jp') ||
-                    result.files.single.extension!.startsWith('png')
-                ? 'image'
-                : 'file',
-      );
-    }
-  }
+  Future<void> _pickAndSendFile() async {}
 
   Widget _buildMessageItem(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data()!;
@@ -243,50 +221,50 @@ class _ChatState extends State<Chat> {
                 return ListView.builder(
                   controller: _scrollController,
                   itemCount: docs.length,
-                  itemBuilder:
-                      (context, index) => _buildMessageItem(docs[index]),
+                  itemBuilder: (context, index) =>
+                      _buildMessageItem(docs[index]),
                 );
               },
             ),
           ),
           chatEnded
               ? Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Text(
-                  "This consultation has ended.",
-                  style: TextStyle(fontStyle: FontStyle.italic),
-                ),
-              )
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "This consultation has ended.",
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  ),
+                )
               : Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                          hintText: 'Type a message',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide.none,
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          decoration: InputDecoration(
+                            hintText: 'Type a message',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 8),
-                    IconButton(
-                      icon: Icon(Icons.document_scanner),
-                      onPressed: _pickAndSendFile,
-                    ),
-                    Obx(() {
-                      return IconButton(
-                        icon: Icon(Icons.send),
-                        onPressed: _isSending.value ? null : _sendMessage,
-                      );
-                    }),
-                  ],
+                      SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(Icons.document_scanner),
+                        onPressed: _pickAndSendFile,
+                      ),
+                      Obx(() {
+                        return IconButton(
+                          icon: Icon(Icons.send),
+                          onPressed: _isSending.value ? null : _sendMessage,
+                        );
+                      }),
+                    ],
+                  ),
                 ),
-              ),
         ],
       ),
     );
@@ -313,7 +291,6 @@ class _RatingDialogState extends State<RatingDialog> {
   double _rating = 0;
   final TextEditingController _reviewController = TextEditingController();
   bool _isSubmitting = false;
-
   Future<void> _submitRating() async {
     if (_rating == 0 || _reviewController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -325,7 +302,12 @@ class _RatingDialogState extends State<RatingDialog> {
     setState(() => _isSubmitting = true);
 
     try {
-      await FirebaseFirestore.instance.collection('reviews').add({
+      final reviewsRef = FirebaseFirestore.instance.collection('reviews');
+      final lawyerRef =
+          FirebaseFirestore.instance.collection('account').doc(widget.lawyerId);
+
+      // Add the review document
+      await reviewsRef.add({
         'lawyerId': widget.lawyerId,
         'rid': widget.rid,
         'reviewerId': widget.reviewerId,
@@ -334,12 +316,36 @@ class _RatingDialogState extends State<RatingDialog> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      Navigator.of(context).pop(); // Close the dialog
+      // Get the lawyer document snapshot
+      final snapshot = await lawyerRef.get();
+
+      if (!snapshot.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lawyer data not found')),
+        );
+        return;
+      }
+
+      final data = snapshot.data()!;
+      final int casesFinished = (data['cases'] ?? 0) as int;
+      final double avgRating = (data['rating'] ?? 0.0).toDouble();
+
+      final int newCount = casesFinished + 1;
+      final double newAverage =
+          ((avgRating * casesFinished) + _rating) / newCount;
+
+      // Update the lawyer stats
+      await lawyerRef.update({
+        'cases': newCount,
+        'rating': double.parse(newAverage.toStringAsFixed(2)),
+      });
+
+      Navigator.of(context).pop();
     } catch (e) {
       print('Error submitting review: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to submit review.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit review.')),
+      );
     } finally {
       setState(() => _isSubmitting = false);
     }
@@ -371,8 +377,8 @@ class _RatingDialogState extends State<RatingDialog> {
               minRating: 1,
               itemCount: 5,
               itemSize: 32,
-              itemBuilder:
-                  (context, _) => Icon(Icons.star, color: Colors.amberAccent),
+              itemBuilder: (context, _) =>
+                  Icon(Icons.star, color: Colors.amberAccent),
               onRatingUpdate: (rating) => setState(() => _rating = rating),
             ),
             SizedBox(height: 16),
@@ -402,20 +408,19 @@ class _RatingDialogState extends State<RatingDialog> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child:
-                  _isSubmitting
-                      ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(color: Colors.white),
-                      )
-                      : Text(
-                        'Submit',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
+              child: _isSubmitting
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(color: Colors.white),
+                    )
+                  : Text(
+                      'Submit',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.white,
                       ),
+                    ),
             ),
           ],
         ),

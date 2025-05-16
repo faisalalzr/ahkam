@@ -25,43 +25,41 @@ class ConsultationDetailsScreen extends StatelessWidget {
   Future<void> _confirmEndConsultation(BuildContext context) async {
     final shouldEnd = await showDialog<bool>(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            title: Text(
-              "End Consultation",
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+      builder: (_) => AlertDialog(
+        title: Text(
+          "End Consultation",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "Are you sure you want to end this consultation?",
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              "Cancel",
+              style: GoogleFonts.poppins(color: Colors.black),
             ),
-            content: Text(
-              "Are you sure you want to end this consultation?",
-              style: GoogleFonts.poppins(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(
-                  "Cancel",
-                  style: GoogleFonts.poppins(color: Colors.black),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                ),
-                child: Text(
-                  "End",
-                  style: GoogleFonts.poppins(color: Colors.white),
-                ),
-              ),
-            ],
           ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+            ),
+            child: Text(
+              "End",
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
 
     if (shouldEnd == true) {
       await requestRef?.update({'ended?': true});
       onEnded(); // Notify parent
       Get.back(); // Return to chat screen
-      Get.snackbar("Consultation Ended", "The chat is now closed.");
     }
   }
 
@@ -108,6 +106,7 @@ class ConsultationDetailsScreen extends StatelessWidget {
             child: Column(
               children: [
                 Card(
+                  color: Colors.white,
                   elevation: 5,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),

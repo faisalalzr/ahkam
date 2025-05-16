@@ -13,7 +13,6 @@ class LawyerDetailsScreen extends StatefulWidget {
   final String lawyerId;
   const LawyerDetailsScreen({
     super.key,
-
     required this.account,
     required this.lawyerId,
   });
@@ -33,12 +32,11 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> getinfo() async {
     try {
-      var query =
-          await fyre
-              .collection('account')
-              .where('uid', isEqualTo: widget.lawyerId)
-              .limit(1)
-              .get();
+      var query = await fyre
+          .collection('account')
+          .where('uid', isEqualTo: widget.lawyerId)
+          .limit(1)
+          .get();
       if (query.docs.isNotEmpty) {
         return query.docs.first;
       }
@@ -103,19 +101,17 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
               hourMinuteColor: Color(0xFFF5F5DC), // beige background
               dayPeriodColor: Color(0xFFF5F5DC), // AM/PM toggle bg
               dayPeriodTextColor: MaterialStateColor.resolveWith(
-                (states) =>
-                    states.contains(MaterialState.selected)
-                        ? Colors.white
-                        : Colors.black,
+                (states) => states.contains(MaterialState.selected)
+                    ? Colors.white
+                    : Colors.black,
               ),
               entryModeIconColor: Color(0xFFD4AF37), // gold
               dialHandColor: Color(0xFFD4AF37),
               dialBackgroundColor: Color(0xFFF5F5DC),
               dialTextColor: MaterialStateColor.resolveWith(
-                (states) =>
-                    states.contains(MaterialState.selected)
-                        ? Colors.white
-                        : Colors.black,
+                (states) => states.contains(MaterialState.selected)
+                    ? Colors.white
+                    : Colors.black,
               ),
             ),
             textButtonTheme: TextButtonThemeData(
@@ -196,112 +192,109 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (_) => Dialog(
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 20,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Container(
-              width: double.infinity, // Full width
-              height:
-                  MediaQuery.of(context).size.height *
-                  0.92, // Almost full height
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 20,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          width: double.infinity, // Full width
+          height:
+              MediaQuery.of(context).size.height * 0.92, // Almost full height
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const SizedBox(
-                        width: 24,
-                      ), // Placeholder to balance close button
-                      Text(
-                        'Book Consultation',
-                        style: GoogleFonts.lato(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          _buildTextField(
-                            'Title',
-                            _titleCont,
-                            icon: Icons.edit,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            'Description',
-                            _descriptionCont,
-                            icon: Icons.description,
-                            maxLines: 6,
-                          ),
-
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            'Select Date',
-                            _dateController,
-                            icon: Icons.calendar_today,
-                            onTap: () => _selectDate(context),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            'Select Time',
-                            _timeController,
-                            icon: Icons.access_time,
-                            onTap: () => _selectTime(context),
-                          ),
-                        ],
-                      ),
+                  const SizedBox(
+                    width: 24,
+                  ), // Placeholder to balance close button
+                  Text(
+                    'Book Consultation',
+                    style: GoogleFonts.lato(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.redAccent,
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: _sendRequest,
-                        child: const Text('Submit'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ],
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      _buildTextField(
+                        'Title',
+                        _titleCont,
+                        icon: Icons.edit,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        'Description',
+                        _descriptionCont,
+                        icon: Icons.description,
+                        maxLines: 6,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        'Select Date',
+                        _dateController,
+                        icon: Icons.calendar_today,
+                        onTap: () => _selectDate(context),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        'Select Time',
+                        _timeController,
+                        icon: Icons.access_time,
+                        onTap: () => _selectTime(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.redAccent,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _sendRequest,
+                    child: const Text('Submit'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
+        ),
+      ),
     );
   }
 
@@ -320,18 +313,21 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
       style: GoogleFonts.lato(fontSize: 15),
       decoration: InputDecoration(
         hintText: label,
-        prefixIcon:
-            icon != null ? Icon(icon, size: 20, color: Colors.grey[700]) : null,
+        prefixIcon: icon != null
+            ? Icon(icon, size: 20, color: const Color.fromARGB(255, 97, 97, 97))
+            : null,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         filled: true,
         fillColor: Colors.grey[100],
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+          borderSide: BorderSide(
+              color: const Color.fromARGB(58, 224, 224, 224), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.black, width: 1.2),
+          borderSide: BorderSide(
+              color: const Color.fromARGB(0, 255, 255, 255), width: 1.2),
         ),
       ),
     );
@@ -400,7 +396,6 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     elevation: 10,
-
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -414,12 +409,11 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 40,
-                                backgroundImage:
-                                    (data['imageUrl'] != null &&
-                                            data['imageUrl'].isNotEmpty)
-                                        ? NetworkImage(data['imageUrl'])
-                                        : AssetImage('assets/images/brad.webp')
-                                            as ImageProvider,
+                                backgroundImage: (data['imageUrl'] != null &&
+                                        data['imageUrl'].isNotEmpty)
+                                    ? NetworkImage(data['imageUrl'])
+                                    : AssetImage('assets/images/brad.webp')
+                                        as ImageProvider,
                               ),
                               SizedBox(width: 16),
                               Expanded(
@@ -436,13 +430,23 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
                                         color: Colors.black87,
                                       ),
                                     ),
-
                                     Text(
                                       data['specialization'] ?? 'Unknown',
                                       style: GoogleFonts.lato(
                                         fontSize: 16,
                                         color: Colors.grey[700],
                                       ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.star,
+                                            color: Colors.amber, size: 13),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          "${data['rating'] ?? 0.0} (${(data['cases'] ?? 0).toInt()} Reviews)",
+                                          style: GoogleFonts.lato(fontSize: 12),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -479,7 +483,6 @@ class _LawyerDetailsScreenState extends State<LawyerDetailsScreen> {
                                   255,
                                   255,
                                 ),
-
                                 foregroundColor: Colors.black,
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 30,

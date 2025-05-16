@@ -88,7 +88,7 @@ class LawyerCard extends StatelessWidget {
                         const Icon(Icons.star, color: Colors.amber, size: 13),
                         const SizedBox(width: 4),
                         Text(
-                          "${lawyerdata['rating'] ?? 0.0} (${(lawyer.rating ?? 0).toInt()} Reviews)",
+                          "${lawyerdata['rating'] ?? 0.0} (${(lawyerdata['cases'] ?? 0).toInt()} Reviews)",
                           style: GoogleFonts.lato(fontSize: 12),
                         ),
                       ],

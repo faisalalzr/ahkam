@@ -120,7 +120,6 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
         var lawyerdata = snapshot.data?.data() ?? {};
 
-        // Safely get imageUrl and decide background image
         ImageProvider backgroundImage;
         final imageUrl = lawyerdata['imageUrl'];
         if (imageUrl != null && imageUrl is String && imageUrl.isNotEmpty) {
@@ -131,219 +130,211 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8F2),
+          child: Card(
+            elevation: 5,
+            color: const Color(0xFFFFF8F2),
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.brown.withOpacity(0.1),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Status and actions row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        "Status: $status",
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    if (status == 'Rejected' || status == 'Cancelled')
-                      Padding(
-                        padding: const EdgeInsets.only(left: 80.0),
-                        child: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () async {
-                            final query = await FirebaseFirestore.instance
-                                .collection('requests')
-                                .where('rid', isEqualTo: rid)
-                                .limit(1)
-                                .get();
-
-                            if (query.docs.isNotEmpty) {
-                              await FirebaseFirestore.instance
-                                  .collection('requests')
-                                  .doc(query.docs.first.id)
-                                  .delete();
-                            }
-                          },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Status and actions row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "Status: $status",
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
-                    if (status == 'Pending')
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                        ),
-                        onPressed: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text("Confirm Cancellation"),
-                              content: const Text(
-                                  "Are you sure you want to cancel this request?"),
-                              actions: [
-                                TextButton(
-                                  child: const Text(
-                                    "No",
-                                    style: TextStyle(color: Colors.black),
-                                  ),
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(false),
-                                ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.redAccent,
-                                  ),
-                                  child: const Text(
-                                    "Yes, Cancel",
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                ),
-                              ],
-                            ),
-                          );
-
-                          if (confirm == true) {
-                            try {
+                      if (status == 'Rejected' || status == 'Cancelled')
+                        Padding(
+                          padding: const EdgeInsets.only(left: 80.0),
+                          child: IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () async {
                               final query = await FirebaseFirestore.instance
                                   .collection('requests')
-                                  .where('userId',
-                                      isEqualTo: widget.account.uid)
-                                  .where('title', isEqualTo: title)
-                                  .where('lawyerName', isEqualTo: lawyerName)
+                                  .where('rid', isEqualTo: rid)
                                   .limit(1)
                                   .get();
 
                               if (query.docs.isNotEmpty) {
-                                await query.docs.first.reference
-                                    .update({'status': 'Cancelled'});
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Request cancelled')),
-                                );
+                                await FirebaseFirestore.instance
+                                    .collection('requests')
+                                    .doc(query.docs.first.id)
+                                    .delete();
                               }
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Failed to cancel request')),
-                              );
-                            }
-                          }
-                        },
-                        child: const Text("Cancel",
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                    if (status == 'Accepted')
-                      ElevatedButton(
-                        onPressed: () {
-                          Get.to(MessagesScreen(account: widget.account));
-                        },
-                        child: const Text(
-                          'Open chat',
-                          style: TextStyle(fontSize: 12, color: Colors.black),
-                        ),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // Profile info row
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 25,
-                      backgroundImage: backgroundImage,
-                      backgroundColor: Colors.grey[300],
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          lawyerName,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
+                            },
                           ),
                         ),
-                        Text(
-                          title,
-                          style: const TextStyle(color: Colors.black),
+                      if (status == 'Pending')
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text("Confirm Cancellation"),
+                                content: const Text(
+                                    "Are you sure you want to cancel this request?"),
+                                actions: [
+                                  TextButton(
+                                    child: const Text(
+                                      "No",
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                    child: const Text(
+                                      "Yes, Cancel",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true) {
+                              try {
+                                final query = await FirebaseFirestore.instance
+                                    .collection('requests')
+                                    .where('userId',
+                                        isEqualTo: widget.account.uid)
+                                    .where('title', isEqualTo: title)
+                                    .where('lawyerName', isEqualTo: lawyerName)
+                                    .limit(1)
+                                    .get();
+
+                                if (query.docs.isNotEmpty) {
+                                  await query.docs.first.reference
+                                      .update({'status': 'Cancelled'});
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Request cancelled')),
+                                  );
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('Failed to cancel request')),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text("Cancel",
+                              style: TextStyle(color: Colors.white)),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      if (status == 'Accepted')
+                        ElevatedButton(
+                          onPressed: () {
+                            Get.to(MessagesScreen(account: widget.account),
+                                transition: Transition.noTransition);
+                          },
+                          child: const Text(
+                            'Open chat',
+                            style: TextStyle(fontSize: 12, color: Colors.black),
+                          ),
+                        ),
+                    ],
+                  ),
 
-                const SizedBox(height: 8),
-                const Divider(color: Color.fromARGB(77, 0, 0, 0)),
-                const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
-                // Request details
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text(
-                      "Case type: Online consultation",
-                      style: TextStyle(color: Color.fromARGB(179, 0, 0, 0)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today,
-                        color: Color.fromARGB(179, 0, 0, 0), size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      formattedDate,
-                      style:
-                          const TextStyle(color: Color.fromARGB(179, 0, 0, 0)),
-                    ),
-                    const SizedBox(width: 16),
-                    const Icon(Icons.access_time,
-                        color: Color.fromARGB(179, 0, 0, 0), size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      time,
-                      style:
-                          const TextStyle(color: Color.fromARGB(179, 0, 0, 0)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.monetization_on,
-                        color: Color.fromARGB(179, 0, 0, 0), size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      "Fees: \$${fees}",
-                      style:
-                          const TextStyle(color: Color.fromARGB(179, 0, 0, 0)),
-                    ),
-                  ],
-                ),
-              ],
+                  // Profile info row
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 25,
+                        backgroundImage: backgroundImage,
+                        backgroundColor: Colors.grey[300],
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lawyerName,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            title,
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+                  const Divider(color: Color.fromARGB(77, 0, 0, 0)),
+                  const SizedBox(height: 8),
+
+                  // Request details
+                  const Text(
+                    "Case type: Online consultation",
+                    style: TextStyle(color: Color.fromARGB(179, 0, 0, 0)),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today,
+                          color: Color.fromARGB(179, 0, 0, 0), size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        formattedDate,
+                        style: const TextStyle(
+                            color: Color.fromARGB(179, 0, 0, 0)),
+                      ),
+                      const SizedBox(width: 16),
+                      const Icon(Icons.access_time,
+                          color: Color.fromARGB(179, 0, 0, 0), size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        time,
+                        style: const TextStyle(
+                            color: Color.fromARGB(179, 0, 0, 0)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.monetization_on,
+                          color: Color.fromARGB(179, 0, 0, 0), size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        "Fees: \$${fees}",
+                        style: const TextStyle(
+                            color: Color.fromARGB(179, 0, 0, 0)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );

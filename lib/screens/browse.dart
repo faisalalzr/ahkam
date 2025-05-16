@@ -96,11 +96,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
                           (val) => setModalState(() => maxFees = val),
                         ),
                         SizedBox(height: 12),
-
                         Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
-
                           children: [
                             Text(
                               "Sort By:",
@@ -148,19 +146,17 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                           ),
                                         ),
                                       ),
-                                      items:
-                                          ['Fees', 'Rating', 'Experience']
-                                              .map(
-                                                (e) => DropdownMenuItem(
-                                                  value: e,
-                                                  child: Text(e),
-                                                ),
-                                              )
-                                              .toList(),
-                                      onChanged:
-                                          (val) => setModalState(
-                                            () => sortOption = val!,
-                                          ),
+                                      items: ['Fees', 'Rating', 'Experience']
+                                          .map(
+                                            (e) => DropdownMenuItem(
+                                              value: e,
+                                              child: Text(e),
+                                            ),
+                                          )
+                                          .toList(),
+                                      onChanged: (val) => setModalState(
+                                        () => sortOption = val!,
+                                      ),
                                       dropdownStyleData: DropdownStyleData(
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
@@ -179,7 +175,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                       () {},
                                     ); // Refresh modal after clearing
                                   },
-
                                   label: Text(
                                     "Clear",
                                     style: TextStyle(
@@ -297,25 +292,23 @@ class _BrowseScreenState extends State<BrowseScreen> {
   List<Map<String, dynamic>> _applyLocalFilters(
     List<QueryDocumentSnapshot> docs,
   ) {
-    final lawyers =
-        docs
-            .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
-            .where((data) {
-              final name = data['name']?.toString().toLowerCase() ?? '';
-              final rating = data['rating']?.toDouble() ?? 0.0;
-              final fees = data['fees']?.toDouble() ?? 0.0;
-              final province = data['province']?.toString() ?? '';
-              final spec = data['specialization']?.toString() ?? '';
-              final exp = data['exp']?.toString() ?? '';
+    final lawyers = docs
+        .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
+        .where((data) {
+      final name = data['name']?.toString().toLowerCase() ?? '';
+      final rating = data['rating']?.toDouble() ?? 0.0;
+      final fees = data['fees']?.toDouble() ?? 0.0;
+      final province = data['province']?.toString() ?? '';
+      final spec = data['specialization']?.toString() ?? '';
+      final exp = data['exp']?.toString() ?? '';
+      final cases = data['cases'].toString() ?? 0;
 
-              return name.contains(_searchQuery.toLowerCase()) &&
-                  rating >= minRating &&
-                  fees <= maxFees &&
-                  (selectedProvince == 'All' || province == selectedProvince) &&
-                  (selectedSpecialization == 'All' ||
-                      spec == selectedSpecialization);
-            })
-            .toList();
+      return name.contains(_searchQuery.toLowerCase()) &&
+          rating >= minRating &&
+          fees <= maxFees &&
+          (selectedProvince == 'All' || province == selectedProvince) &&
+          (selectedSpecialization == 'All' || spec == selectedSpecialization);
+    }).toList();
 
     if (sortOption == 'Rating') {
       lawyers.sort((a, b) => (b['rating'] ?? 0).compareTo(a['rating'] ?? 0));
@@ -332,9 +325,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Query query = _firestore
-        .collection('account')
-        .where('isLawyer', isEqualTo: true);
+    Query query =
+        _firestore.collection('account').where('isLawyer', isEqualTo: true);
     if (widget.category != null) {
       query = query.where('specialization', isEqualTo: widget.category);
     }
@@ -410,6 +402,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                         desc: lawyerData['desc'] ?? '',
                         fees: lawyerData['fees'] ?? 0,
                         exp: lawyerData['exp'] ?? 0,
+                        cases: lawyerData['cases'] ?? 0,
                       );
                       return LawyerCardBrowse(
                         lawyer: lawyer,
@@ -500,15 +493,14 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
           ),
           isExpanded: true,
-          items:
-              items
-                  .map(
-                    (item) => DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(item, style: TextStyle(fontSize: 11)),
-                    ),
-                  )
-                  .toList(),
+          items: items
+              .map(
+                (item) => DropdownMenuItem<String>(
+                  value: item,
+                  child: Text(item, style: TextStyle(fontSize: 11)),
+                ),
+              )
+              .toList(),
           onChanged: (val) => onChanged(val!),
           dropdownStyleData: DropdownStyleData(
             decoration: BoxDecoration(
@@ -544,19 +536,19 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
             label == "Maximum Fees"
                 ? Text(
-                  "\$${value.toStringAsFixed(0)}",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: labelColor,
-                  ),
-                )
+                    "\$${value.toStringAsFixed(0)}",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: labelColor,
+                    ),
+                  )
                 : Text(
-                  value.toStringAsFixed(0),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: labelColor,
+                    value.toStringAsFixed(0),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: labelColor,
+                    ),
                   ),
-                ),
           ],
         ),
         Slider(

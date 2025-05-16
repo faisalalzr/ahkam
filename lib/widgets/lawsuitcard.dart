@@ -47,12 +47,11 @@ class _LawsuitCardState extends State<LawsuitCard> {
 
   Future<void> fetchUserPic() async {
     try {
-      var querySnapshot =
-          await fyre
-              .collection('account')
-              .where('name', isEqualTo: widget.username)
-              .limit(1)
-              .get();
+      var querySnapshot = await fyre
+          .collection('account')
+          .where('name', isEqualTo: widget.username)
+          .limit(1)
+          .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         var data = querySnapshot.docs.first.data();
@@ -67,12 +66,11 @@ class _LawsuitCardState extends State<LawsuitCard> {
 
   Future<void> fetchRequestId() async {
     try {
-      var querySnapshot =
-          await fyre
-              .collection('requests')
-              .where('rid', isEqualTo: widget.rid)
-              .limit(1)
-              .get();
+      var querySnapshot = await fyre
+          .collection('requests')
+          .where('rid', isEqualTo: widget.rid)
+          .limit(1)
+          .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         requestId = querySnapshot.docs.first.id;
@@ -85,12 +83,11 @@ class _LawsuitCardState extends State<LawsuitCard> {
 
   Future<void> fetchConsultationDuration() async {
     try {
-      var querySnapshot =
-          await fyre
-              .collection('requests')
-              .where('rid', isEqualTo: widget.rid)
-              .limit(1)
-              .get();
+      var querySnapshot = await fyre
+          .collection('requests')
+          .where('rid', isEqualTo: widget.rid)
+          .limit(1)
+          .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         var data = querySnapshot.docs.first.data();
@@ -112,21 +109,19 @@ class _LawsuitCardState extends State<LawsuitCard> {
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor =
-        status == 'Accepted'
-            ? const Color.fromARGB(255, 75, 174, 80)
-            : status == 'Pending'
+    Color statusColor = status == 'Accepted'
+        ? const Color.fromARGB(255, 75, 174, 80)
+        : status == 'Pending'
             ? const Color.fromRGBO(255, 196, 0, 1)
             : status == 'Rejected'
-            ? const Color.fromARGB(255, 255, 22, 22)
-            : Colors.black;
+                ? const Color.fromARGB(255, 255, 22, 22)
+                : Colors.black;
 
     return Card(
-      elevation: 8,
+      elevation: 5,
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       shadowColor: const Color.fromARGB(255, 0, 35, 73).withOpacity(0.2),
-
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(

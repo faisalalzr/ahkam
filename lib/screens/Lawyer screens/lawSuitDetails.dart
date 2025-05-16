@@ -151,8 +151,10 @@ class _LawsuitState extends State<Lawsuit> {
                 if (status == 'Accepted' || status == 'Rejected')
                   Center(
                     child: ElevatedButton.icon(
-                      onPressed: () => Get.back(),
-
+                      onPressed: () {
+                        Get.back();
+                        setState(() {});
+                      },
                       label: const Text(
                         'Back',
                         style: TextStyle(color: Colors.white),
@@ -182,17 +184,7 @@ class _LawsuitState extends State<Lawsuit> {
                               requestId: request['rid'],
                               fee: request['fees'],
                             );
-                            if (mounted) {
-                              Get.snackbar(
-                                'Case Accepted',
-                                'Your client will be notified',
-                                backgroundColor: Colors.teal.shade50,
-                                colorText: Colors.teal.shade900,
-
-                                margin: const EdgeInsets.all(16),
-                                borderRadius: 12,
-                              );
-                            }
+                            if (mounted) {}
                           },
                           icon: const Icon(Icons.check_circle_outline),
                           label: const Text('Accept'),

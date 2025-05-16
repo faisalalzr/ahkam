@@ -6,13 +6,7 @@ import 'package:flutter/foundation.dart'
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart';
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
+
 /// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -42,16 +36,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyBOJahCFc_LTLmtJVDyNE7r8N3P98a1RmM',
-    appId: '1:109566467452:web:c7b120a4fe98b94488d8f9',
+    appId: '1:109566467452:web:b0fc9ea461d4d20388d8f9',
     messagingSenderId: '109566467452',
     projectId: 'ahkamapp',
     authDomain: 'ahkamapp.firebaseapp.com',
     storageBucket: 'ahkamapp.firebasestorage.app',
+    measurementId: 'G-43H27RWW32',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBzyAeJZUvVdHZ2avKrMDOmtVY5g0mzMf8',
-    appId: '1:109566467452:android:642149bcd02d03d488d8f9',
+    appId: '1:109566467452:android:a30ec75a1503c38d88d8f9',
     messagingSenderId: '109566467452',
     projectId: 'ahkamapp',
     storageBucket: 'ahkamapp.firebasestorage.app',
@@ -77,11 +72,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyBOJahCFc_LTLmtJVDyNE7r8N3P98a1RmM',
-    appId: '1:109566467452:web:b0fc9ea461d4d20388d8f9',
+    appId: '1:109566467452:web:ce7c99f50447027a88d8f9',
     messagingSenderId: '109566467452',
     projectId: 'ahkamapp',
     authDomain: 'ahkamapp.firebaseapp.com',
     storageBucket: 'ahkamapp.firebasestorage.app',
+    measurementId: 'G-GVF3KLGKHH',
   );
 
 }

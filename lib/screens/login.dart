@@ -42,12 +42,11 @@ class _LoginScreenState extends State<LoginScreen> {
       User? anyUser = userCredential.user;
       if (anyUser == null) throw Exception("User not found.");
 
-      QuerySnapshot userQuery =
-          await _firestore
-              .collection('account')
-              .where('email', isEqualTo: email)
-              .limit(1)
-              .get();
+      QuerySnapshot userQuery = await _firestore
+          .collection('account')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
 
       if (userQuery.docs.isEmpty) {
         throw Exception("User not found in Firestore.");
@@ -61,15 +60,16 @@ class _LoginScreenState extends State<LoginScreen> {
         Get.off(
           () => LawyerHomeScreen(
             lawyer: Lawyer(
-              email: anyUser.email!,
-              name: userDoc['name'],
-              imageUrl: userDoc['imageUrl'],
-              uid: userDoc['uid'],
-              desc: userDoc['desc'],
-              number: userDoc['number'],
-              province: userDoc['province'],
-              fees: userDoc['fees'],
-            ),
+                email: anyUser.email!,
+                name: userDoc['name'],
+                imageUrl: userDoc['imageUrl'],
+                uid: userDoc['uid'],
+                desc: userDoc['desc'],
+                number: userDoc['number'],
+                province: userDoc['province'],
+                fees: userDoc['fees'],
+                cases: userDoc['cases'],
+                rating: userDoc['rating']),
           ),
         );
       } else {
@@ -145,11 +145,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Text("Don't have an account?"),
                   TextButton(
-                    onPressed:
-                        () => Get.to(
-                          RegisterScreen(),
-                          transition: Transition.rightToLeft,
-                        ),
+                    onPressed: () => Get.to(
+                      RegisterScreen(),
+                      transition: Transition.rightToLeft,
+                    ),
                     child: const Text(
                       "Sign up",
                       style: TextStyle(color: Colors.blue),

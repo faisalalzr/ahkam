@@ -96,8 +96,8 @@ class LawyerCardBrowse extends StatelessWidget {
                         const Icon(Icons.star, color: Colors.amber, size: 12),
                         const SizedBox(width: 4),
                         Text(
-                          "${lawyer.rating ?? 0.0} (${(lawyer.rating ?? 0).toInt()} Reviews)",
-                          style: GoogleFonts.lato(fontSize: 14),
+                          "${lawyer.rating ?? 0.0} (${(lawyer.cases ?? 0).toInt()} Reviews)",
+                          style: GoogleFonts.lato(fontSize: 12),
                         ),
                       ],
                     ),
@@ -105,7 +105,7 @@ class LawyerCardBrowse extends StatelessWidget {
                     Text(
                       lawyer.specialization ?? 'Legal Expert',
                       style: GoogleFonts.lato(
-                        fontSize: 14,
+                        fontSize: 13,
                         color: Colors.grey[700],
                       ),
                     ),

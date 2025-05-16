@@ -30,12 +30,11 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
   }
 
   Future<void> loadPayments() async {
-    QuerySnapshot snapshot =
-        await FirebaseFirestore.instance
-            .collection('payments')
-            .where('lawyerId', isEqualTo: widget.lawyer.uid)
-            .orderBy('date', descending: true)
-            .get();
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('payments')
+        .where('lawyerId', isEqualTo: widget.lawyer.uid)
+        .orderBy('date', descending: true)
+        .get();
 
     List<Map<String, dynamic>> fetchedPayments =
         snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
@@ -62,7 +61,7 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF7F9FB),
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Text(
@@ -180,6 +179,7 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
           ...payments.map((payment) {
             DateTime date = DateTime.parse(payment['date']);
             return Card(
+              color: Colors.white,
               margin: EdgeInsets.symmetric(vertical: 6),
               elevation: 3,
               shape: RoundedRectangleBorder(
@@ -225,83 +225,82 @@ class _LawyerWalletScreenState extends State<LawyerWalletScreen> {
         Container(
           height: 250,
           padding: EdgeInsets.symmetric(horizontal: 8),
-          child:
-              monthlyEarnings.isEmpty
-                  ? Center(
-                    child: Text(
-                      'No data yet.',
-                      style: GoogleFonts.poppins(color: Colors.grey),
-                    ),
-                  )
-                  : BarChart(
-                    BarChartData(
-                      borderData: FlBorderData(show: false),
-                      titlesData: FlTitlesData(
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              if (value.toInt() < months.length) {
-                                final monthNum = int.parse(
-                                  months[value.toInt()].split('-')[1],
-                                );
-                                final monthLabel = _getMonthAbbreviation(
-                                  monthNum,
-                                );
-                                return Text(
-                                  monthLabel,
-                                  style: GoogleFonts.poppins(fontSize: 11),
-                                );
-                              }
-                              return Text('');
-                            },
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 32,
-                            getTitlesWidget: (value, meta) {
-                              if (value % 50 == 0) {
-                                return Text(
-                                  '\$${value.toInt()}',
-                                  style: GoogleFonts.poppins(fontSize: 10),
-                                );
-                              }
-                              return SizedBox.shrink();
-                            },
-                          ),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
+          child: monthlyEarnings.isEmpty
+              ? Center(
+                  child: Text(
+                    'No data yet.',
+                    style: GoogleFonts.poppins(color: Colors.grey),
+                  ),
+                )
+              : BarChart(
+                  BarChartData(
+                    borderData: FlBorderData(show: false),
+                    titlesData: FlTitlesData(
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            if (value.toInt() < months.length) {
+                              final monthNum = int.parse(
+                                months[value.toInt()].split('-')[1],
+                              );
+                              final monthLabel = _getMonthAbbreviation(
+                                monthNum,
+                              );
+                              return Text(
+                                monthLabel,
+                                style: GoogleFonts.poppins(fontSize: 11),
+                              );
+                            }
+                            return Text('');
+                          },
                         ),
                       ),
-                      gridData: FlGridData(show: true, horizontalInterval: 50),
-                      barGroups:
-                          monthlyEarnings.entries.toList().asMap().entries.map((
-                            entry,
-                          ) {
-                            int idx = entry.key;
-                            var e = entry.value;
-                            return BarChartGroupData(
-                              x: idx,
-                              barRods: [
-                                BarChartRodData(
-                                  toY: e.value,
-                                  gradient: LinearGradient(
-                                    colors: [Colors.blueAccent, Colors.blue],
-                                  ),
-                                  width: 16,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                              ],
-                            );
-                          }).toList(),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 32,
+                          getTitlesWidget: (value, meta) {
+                            if (value % 50 == 0) {
+                              return Text(
+                                '\$${value.toInt()}',
+                                style: GoogleFonts.poppins(fontSize: 10),
+                              );
+                            }
+                            return SizedBox.shrink();
+                          },
+                        ),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
                     ),
+                    gridData: FlGridData(show: true, horizontalInterval: 50),
+                    barGroups:
+                        monthlyEarnings.entries.toList().asMap().entries.map((
+                      entry,
+                    ) {
+                      int idx = entry.key;
+                      var e = entry.value;
+                      return BarChartGroupData(
+                        x: idx,
+                        barRods: [
+                          BarChartRodData(
+                            toY: e.value,
+                            gradient: LinearGradient(
+                              colors: [Colors.blueAccent, Colors.blue],
+                            ),
+                            width: 16,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
+                ),
         ),
       ],
     );
